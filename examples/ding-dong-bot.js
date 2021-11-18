@@ -10,11 +10,10 @@
   log,
 }                     from 'wechaty'
 import qrcodeTerminal from 'qrcode-terminal'
-
+import { Client } from "@opensearch-project/opensearch"
 function onScan (qrcode, status) {
   if (status === ScanStatus.Waiting || status === ScanStatus.Timeout) {
     qrcodeTerminal.generate(qrcode, { small: true })  // show qrcode on console
-
     const qrcodeImageUrl = [
       'https://wechaty.js.org/qrcode/',
       encodeURIComponent(qrcode),
@@ -34,12 +33,13 @@ function onLogin (user) {
 function onLogout (user) {
   log.info('StarterBot', '%s logout', user)
 }
-
+var i = 0; 
 async function onMessage (msg) {
   log.info('StarterBot', msg.toString())
-
+  log.info('StarterBot', JSON.stringify(msg)); 
+  log.info('StarterBot', i.toString()); i++; //counter
   if (msg.text() === 'ding') {
-    await msg.say('dong')
+    await msg.say('ddong123')
   }
 }
 
@@ -66,5 +66,8 @@ bot.on('logout',  onLogout)
 bot.on('message', onMessage)
 
 bot.start()
-  .then(() => log.info('StarterBot', 'Starter Bot Started.'))
+  .then(async () => {
+	  log.info('StarterBot', 'Starter Bot Started.')
+	  // await bot.logout()
+  })
   .catch(e => log.error('StarterBot', e))
