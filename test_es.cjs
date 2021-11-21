@@ -311,7 +311,7 @@ async function query_document(index_name,query){
 }
 var index_metric = "juzibot-sales-metric";
 var response_time = 60*1000
-var all_sales = ['童子铨','曾璐','陈子曦','董森','冯伦','韩祥宇','宋宗强','王建超']
+var all_sales = ['童子铨','曾璐','陈子曦','董森','冯伦','韩祥宇','宋宗强','王建超','曹啸']
 var juzi_corp_name = "北京句子互动科技有限公司"
 async function myfunc(){
   var value = await client.get({
@@ -321,13 +321,14 @@ async function myfunc(){
   console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
   var source = value.body._source; 
   var data = value.body._source.data; 
-  
+  var total_csv_data = []
+  var total_detail_data = []
   for(var i in data){
-    console.log(JSON.stringify(i,null,4));
+    //console.log(JSON.stringify(i,null,4));
     if(data[i]["role"]==="sales"){
       for(var room in data[i]["all_rooms"]){
-        console.log("\nroom: "+room);
-                
+        console.log("\nname: "+i+" room: "+room);     
+        
         var qq = {
           sort:[
             {"payload.timestamp":{"order":"asc"}}
@@ -339,12 +340,12 @@ async function myfunc(){
                 {match: {
                   "payload.roomInfo.topic.keyword":room
                 }},
-                // {range:{
-                //   "payload.timestamp": {
-                //     gte: "now-1d/d",
-                //     lt: "now/d"
-                //   }
-                // }}
+                {range:{
+                  "payload.timestamp": {
+                    gte: "now-1d/d",
+                    lt: "now/d"
+                  }
+                }}
               ]
             }
           }
@@ -353,48 +354,67 @@ async function myfunc(){
         //console.log(response);
         var to_reply = false; 
         var to_reply_msg_time = new Date(); //not know whether null is ok? 
-        print_a_room(response)
-        // for(var k=0; k<response.length;k++){
-        //   //console.log("name:"+response[k]._source.payload.fromInfo.payload.name);
-        //   //console.log("  "+response[k]._source.payload.text);
-        //   var obj = response[k]._source.payload; 
-        //   var d = new Date(obj.timestamp)
-        //   var s = d.toLocaleTimeString()
-        //   var ss = d.toLocaleDateString()
+        var [crit_2_min_count,avg_time,total_num] = print_a_room(response);
+        
+        console.log("crit_2_min_count,avg_time,total_num:"+[crit_2_min_count,avg_time,total_num]);
+        total_csv_data.push({
+          name: i,
+          room: room,
+          over2mins: crit_2_min_count,
+          avg: avg_time,
+          total:total_num
+        })
+        // var room_output_data =  Array.from(output_room(response));
+        // total_detail_data = total_detail_data.concat(room_output_data)
+        // console.log("room_output_data:\n"+JSON.stringify(room_output_data,null,4));
+        // console.log("room_output_data type:\n"+JSON.stringify(typeof room_output_data,null,4));
+        // room_output_data.forEach((element, index, array) => {
+        //   console.log(element); // 100, 200, 300
           
-        //   console.log(
-            
-        //     ss+" "+s+" "+obj.roomInfo.topic+" "+
-        //     obj.fromInfo.payload.name+
-        //     ":"+
-        //     obj.text + " "
-        //     );
-        //   if(is_from_customer(response[k])){
-            
-        //     if(to_reply===false){
-        //       console.log("1st from customer ")
-        //       to_reply = true; 
-        //       to_reply_msg_time = d
-        //     }
-        //   }else{
-            
-        //     if(to_reply===true){
-        //       console.log("1st reply")
-        //       to_reply = false
-        //       var replied_msg_time = (d - to_reply_msg_time)/1000  //this - is ok? 
-        //       //console.log("replied: "+replied_msg_time)
-        //       console.log("replied: "+Math.floor(replied_msg_time/60)+" minutes and "+replied_msg_time%60+" sec")
-        //     }
-        //   }
+        // }); 
+        //not work 
+        // for(var room_i; room_i<room_output_data.length; room_i++){
+        //   console.log(room_output_data[room_i])
+        //   //total_detail_data.push(room_output_data[room_i]);
         // }
         
       }
     }
   }
+  //quit double loop 
+  var options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+  var s = new Date(Date.now()).toLocaleDateString("en-US", options);
+  console.log(s)
+  console.log(total_detail_data)
+  //console.log("room_output_data:\n"+JSON.stringify(total_detail_data,null,4));
+  //msg_detail_output("detail_1_day"+s,total_detail_data)
+  total_output("total_"+s,total_csv_data);
+
 }
-//myfunc()
+myfunc()
 //retrieve_id_from_channel(1032755)
-async function retrieve_id_from_channel(id){
+//retrieve_room_from_name("句子互动服务群-安徽节点信息")
+async function retrieve_room_from_name(room){
+  if(room !== ""){
+    console.log("is a room")
+    var qq1 = {
+      sort:[
+        {"payload.timestamp":{"order":"asc"}}
+      ],
+      size:1000,
+      query: {
+        match: {
+          "payload.roomInfo.topic.keyword":room
+        }
+      }
+    }
+    var channel_response = await query_document(index_name,qq1);
+    print_a_room(channel_response,true);
+  }else{
+    console.log("is not a room")
+  }
+}
+async function retrieve_id_from_channel(id){ //retrieve channel from id 
   var value = await client.get({
     id: 2,
     index: index_metric
@@ -447,48 +467,123 @@ function is_from_customer(msg){
   return !all_sales.includes(msg._source.payload.fromInfo.payload.name) && //not sales
   (msg._source.payload.fromInfo.payload.corporation!==juzi_corp_name) //not employee
 }
-
-
-function print_a_room(response){
+function output_room(response){
   var to_reply = false; 
   var to_reply_msg_time = new Date(); //not know whether null is ok? 
+  var crit_2_mins_count = 0; 
+  const time_threshold_min = 2;
+  if(response.length===0){
+    return false
+  }
+  var room_output_data = [];
+  var customer_name = "";
+  var customer_time = null;
+  var customer_msg = "";
   for(var k=0; k<response.length;k++){
-    //console.log(k);
-    //console.log(response[k])
-    //console.log("name:"+response[k]._source.payload.fromInfo.payload.name);
-    //console.log("  "+response[k]._source.payload.text);
     var obj = response[k]._source.payload; 
     var d = new Date(obj.timestamp)
     var s = d.toLocaleTimeString()
     var ss = d.toLocaleDateString()
-    
+    var name = obj.fromInfo.payload.name; 
+    var room = obj.roomInfo.topic; 
+    // if(print_msg){
+    //   console.log(
+    //     ss+" "+s+" "+obj.roomInfo.topic+" "+
+    //     obj.fromInfo.payload.name+
+    //     ":"+
+    //     obj.text + " "
+    //     );
+    //   }
+    if(is_from_customer(response[k])){
+      if(to_reply===false){
+        //console.log("1st from customer ")
+        to_reply = true; 
+        to_reply_msg_time = d
+        customer_name = obj.fromInfo.payload.name;
+        customer_time = s; 
+        customer_msg = obj.text; 
+      }
+    }else{
+      if(to_reply===true){
+        //console.log("1st reply")
+        to_reply = false
+        var replied_msg_time_sec = (d - to_reply_msg_time) /1000  //this - is ok? 
+        //console.log("replied: "+replied_msg_time)
+        //console.log("replied: "+Math.floor(replied_msg_time_sec/60)+" minutes and "+replied_msg_time_sec%60+" sec")
+        if(replied_msg_time_sec > time_threshold_min * 60){
+          crit_2_mins_count+=1; 
+
+          room_output_data.push({
+            name:name,
+            room:room,
+            customer_name:customer_name,
+            msg_customer:customer_msg,
+            msg_reply:obj.text,
+            reply_time:(replied_msg_time_sec/60).toFixed(2),
+            time:s,
+            msg_reply_id:obj.id,
+          })
+        }
+        //sum += replied_msg_time_sec; 
+      }
+    }
+  }
+  return room_output_data
+  // {id: 'name', title: 'Name'},
+  // {id: 'room', title: 'Room'},
+  // {id: 'customer_name', title: 'Customer Name'},
+  // {id: 'msg_customer', title: 'Customer Fisrt Message'},
+  // {id: 'msg_reply', title: 'Sales Reply Message'},
+  // {id: 'reply_time', title: 'Reply Time (min)'},
+  // {id: 'time', title: 'Message Time(min)'},
+  // {id: 'msg_reply_id', title: 'Message ID'},
+
+}
+
+function print_a_room(response,print_msg=false){
+  var to_reply = false; 
+  var to_reply_msg_time = new Date(); //not know whether null is ok? 
+  var crit_2_mins_count = 0; 
+  const time_threshold_min = 2;
+  var sum = 0.0; 
+  if(response.length===0){
+    return([0,0,0])
+  }
+  for(var k=0; k<response.length;k++){
+    var obj = response[k]._source.payload; 
+    var d = new Date(obj.timestamp)
+    var s = d.toLocaleTimeString()
+    var ss = d.toLocaleDateString()
+    if(print_msg){
     console.log(
-      
       ss+" "+s+" "+obj.roomInfo.topic+" "+
       obj.fromInfo.payload.name+
       ":"+
       obj.text + " "
       );
-
+    }
       if(is_from_customer(response[k])){
-            
         if(to_reply===false){
-          console.log("1st from customer ")
+          //console.log("1st from customer ")
           to_reply = true; 
           to_reply_msg_time = d
         }
       }else{
-        
         if(to_reply===true){
-          console.log("1st reply")
+          //console.log("1st reply")
           to_reply = false
-          var replied_msg_time = (d - to_reply_msg_time)/1000  //this - is ok? 
+          var replied_msg_time_sec = (d - to_reply_msg_time) /1000  //this - is ok? 
           //console.log("replied: "+replied_msg_time)
-          console.log("replied: "+Math.floor(replied_msg_time/60)+" minutes and "+replied_msg_time%60+" sec")
+          //console.log("replied: "+Math.floor(replied_msg_time_sec/60)+" minutes and "+replied_msg_time_sec%60+" sec")
+          if(replied_msg_time_sec > time_threshold_min * 60){
+            crit_2_mins_count+=1; 
+          }
+          sum += replied_msg_time_sec; 
         }
       }
     }
-    
+  var avg = (sum/response.length/60).toFixed(2)
+  return [crit_2_mins_count,avg,response.length]
 }
 
 
@@ -514,6 +609,77 @@ function recalculate_index(value){
   console.log("after"+JSON.stringify(value.body._source,null,4));
 
 }
+
+
+
+
+const sales_output_head = "all_output/"
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+
+function total_output(timerange,data){
+  const csvWriter = createCsvWriter({
+    path: sales_output_head+timerange+'total.csv',
+    header: [
+      {id: 'name', title: 'Name'},
+      {id: 'room', title: 'Room'},
+      {id: 'over2mins', title: 'Exceed 2 Minute (times)'},
+      {id: 'avg', title: 'Average Reply Time (mins)'},
+      {id: 'total', title: 'Total Relpies (times)'},
+    ]
+  }); 
+  csvWriter
+  .writeRecords(data)
+  .then(()=> console.log('The CSV file was written successfully'));
+}
+
+function msg_detail_output(timerange,data){
+  const csvWriter = createCsvWriter({
+    path: sales_output_head+timerange+'_room_detail.csv',
+    header: [
+      {id: 'name', title: 'Name'},
+      {id: 'room', title: 'Room'},
+      {id: 'customer_name', title: 'Customer Name'},
+      {id: 'msg_customer', title: 'Customer Fisrt Message'},
+      {id: 'msg_reply', title: 'Sales Reply Message'},
+      {id: 'reply_time', title: 'Reply Time (min)'},
+      {id: 'time', title: 'Message Time'},
+      {id: 'msg_reply_id', title: 'Message ID'},
+    ]
+  });
+  csvWriter
+  .writeRecords(data)
+  .then(()=> console.log('The CSV file was written successfully'));
+}
+
+function room_output(timerange,name,room,data){
+  const tnrce = timerange+"_"+name+"_"+room+"_" ; //time, name,room,criteria 
+  const csvWriter = createCsvWriter({
+    path: sales_output_head+timerange+tnrce+'.csv',
+    header: [
+      {id: 'msg_customer', title: 'Customer Fisrt Message'},
+      {id: 'msg_reply', title: 'Sales Reply Message'},
+      {id: 'msg_reply_id', title: 'Message ID'},
+      {id: 'time', title: 'Message Time'},
+    ]
+  });
+  csvWriter
+  .writeRecords(data)
+  .then(()=> console.log('The CSV file was written successfully'));
+}
+
+
+// const fs = require('fs');
+// const path = require('path');
+// function mkdir(__dirname,name){
+//   fs.mkdir(path.join(__dirname, name), (err) => {
+//       if (err) {
+//           return console.error(err);
+//       }
+//       console.log('Directory created successfully!');
+//   });
+// }
+
+
 
 // function update_role(){
 //   for(var x in value.body._source){
@@ -580,9 +746,6 @@ function recalculate_index(value){
 // })();
 
 
-
-
-
 // import {saveAs} from "file-saver";
 
 // const { Parser } = require('json2csv');
@@ -590,60 +753,9 @@ function recalculate_index(value){
 // var FileSaver = require('file-saver');
 // // var blob = new Blob(["Hello, world!"], {type: "text/plain;charset=utf-8"});
 // FileSaver.saveAs(blob, "helloworld.txt");
-// const myCars = [
-//   {
-//     "car": "Audi",
-//     "price": 40000,
-//     "color": "blue"
-//   }, {
-//     "car": "BMW",
-//     "price": 35000,
-//     "color": "black"
-//   }, {
-//     "car": "Porsche",
-//     "price": 60000,
-//     "color": "green"
-//   }
-// ];
-
 // const json2csvParser = new Parser();
 // const csv = json2csvParser.parse(myCars);
 // console.log(csv);
 // var fileName = "1.csv"
 // var blob = new Blob([csv], { type: 'application/vnd.ms-excel',fileName });
 // FileSaver.saveAs(blob)
-
-const sales_output_head = "all_output/"
-const createCsvWriter = require('csv-writer').createObjectCsvWriter;
-const csvWriter = createCsvWriter({
-  path: sales_output_head+'out.csv',
-  header: [
-    {id: 'name', title: 'Name'},
-    {id: 'surname', title: 'Surname'},
-    {id: 'age', title: 'Age'},
-    {id: 'gender', title: 'Gender'},
-  ]
-});
-
-const data = [
-  {
-    name: 'John',
-    surname: 'Snow',
-    age: 26,
-    gender: 'M'
-  }, {
-    name: 'Clair',
-    surname: 'White',
-    age: 33,
-    gender: 'F',
-  }, {
-    name: 'Fancy',
-    surname: 'Brown',
-    age: 78,
-    gender: 'F'
-  }
-];
-
-csvWriter
-  .writeRecords(data)
-  .then(()=> console.log('The CSV file was written successfully'));

@@ -83,7 +83,8 @@ function onLogout(user) {
 var iii = 0;
 var all_sales = [
   // '童子铨','曾璐','陈子曦','董森','冯伦','韩祥宇','宋宗强','王建超'
-  '曾璐','陈子曦','董森','冯伦','韩祥宇','宋宗强','王建超'
+  '曾璐','董森','宋宗强','曹啸','陈子曦','冯伦','韩祥宇','尹伯昊','李传君','李添','刘珉','孙文博','陶好',
+  '田野','吴强强','王生良'
 ]
 
 
@@ -122,26 +123,19 @@ async function onMessage(msg) {
     msg._payload.roomInfo = {};
     msg._payload.toInfo = rename_payload(msg.to());
   } else {
-
-
-
-
     var room_name = await msg.room().topic();
     var value = await client.get({
       id: doc_metric_id,
       index: index_metric
     })
 
-
-
-
     //console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
     var source = value.body._source ;
     var data = value.body._source.data ;
+   //data['曹啸']['role']="sales"
     log.info('StarterBot', value);
       //take namelist of sales and customer, if there isn't create a new one (sales to customer : one to many)
       if(!Object.keys(data).includes(msg.from().name()) ){//if not recorded, and is sale: create new name 
-        
         if(all_sales.includes(msg.from().name())){
         
           data[msg.from().name()]={'all_rooms':{}}; 
@@ -206,7 +200,9 @@ async function onMessage(msg) {
       }else if (all_sales.includes(msg.from().name())){ //still need to be sales
         console.log('old room, still update customer...')
         var name = msg.from().name(); 
-        if("finished_update" in data[msg.from().name()]['all_rooms'][room_name]){
+        //if("finished_update" in data[msg.from().name()]['all_rooms'][room_name]){
+        var version_num = 1;
+        if(data[msg.from().name()]['all_rooms'][room_name]["finished_update"]===version_num){
           console.log("finished update!!!")
         }else{
           //
