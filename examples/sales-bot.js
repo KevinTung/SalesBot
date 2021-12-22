@@ -33,7 +33,8 @@ var client = new Client({
 //put document into opensearch 
 var index_name = "juzibot-sales-msg-v2-4";
 var index_metric = "juzibot-sales-metric-test";
-var doc_metric_id = 2;
+var doc_metric_id = 3;
+var doc_metric_id_test = 3;
 var juzi_corp_name = "北京句子互动科技有限公司"
 async function put_document(index_name, document, id) {
   // Add a document to the index.
@@ -83,8 +84,8 @@ function onLogout(user) {
 var iii = 0;
 var all_sales = [
   // '童子铨','曾璐','陈子曦','董森','冯伦','韩祥宇','宋宗强','王建超'
-  '曾璐','董森','宋宗强','曹啸','陈子曦','冯伦','韩祥宇','尹伯昊','李传君','李添','刘珉','孙文博','陶好',
-  '田野','吴强强','王生良'
+  '曾璐','董森','宋宗强','陈子曦','冯伦','尹伯昊','李传君','李添','刘珉','孙文博','齐全喜'
+  ,'陶好','田野','吴强强','王生良'
 ]
 
 
@@ -137,7 +138,6 @@ async function onMessage(msg) {
       //take namelist of sales and customer, if there isn't create a new one (sales to customer : one to many)
       if(!Object.keys(data).includes(msg.from().name()) ){//if not recorded, and is sale: create new name 
         if(all_sales.includes(msg.from().name())){
-        
           data[msg.from().name()]={'all_rooms':{}}; 
           data[msg.from().name()]["rooms_count"]=0;
           source["names_count"]+=1; 
@@ -229,10 +229,11 @@ async function onMessage(msg) {
           }
           data[msg.from().name()]['all_rooms'][room_name]["finished_update"] = 1; 
         }
+      }else{
+        console.log("error:room not captured");
       }
       //put the new index back
-      //console.log("final\n"+JSON.stringify(value.body._source,null,4));
-      put_document(index_metric,value.body._source,doc_metric_id);
+      put_document(index_metric,value.body._source, doc_metric_id_test);
 
     msg._payload.toInfo = {};
     var new_room = rename_payload(msg.room());
@@ -257,15 +258,6 @@ async function onMessage(msg) {
   log.info('StarterBot','after\n'+JSON.stringify(new_msg));
   put_document(index_name, JSON.stringify(new_msg), new_msg.id); //id in ES and in wechat is the same 
   log.info('StarterBot', iii.toString()); iii++; //counter
-
-
-
-  //timer section
-  // if(
-  //   //new_msg.payload.fromInfo.payload.corporation=='北京句子互动科技有限公司' && 
-  //   new_msg.payload.fromInfo.payload.name=='童子铨'){
-  //   setTimeout(() => {  msg.say('dingdingding');   }, 1000);
-  // }
   
 }
 

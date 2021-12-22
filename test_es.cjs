@@ -311,20 +311,54 @@ async function query_document(index_name,query){
 }
 var index_metric = "juzibot-sales-metric";
 var response_time = 60*1000
-var all_sales = ['童子铨','曾璐','陈子曦','董森','冯伦','韩祥宇','宋宗强','王建超','曹啸']
+//var all_sales = ['童子铨','曾璐','陈子曦','董森','冯伦','韩祥宇','宋宗强','王建超','曹啸']
+var all_sales = [
+  // '童子铨','曾璐','陈子曦','董森','冯伦','韩祥宇','宋宗强','王建超'
+  '曾璐','董森','宋宗强','陈子曦','冯伦','尹伯昊','李传君','李添','刘珉','孙文博','齐全喜'
+  ,'陶好','田野','吴强强','王生良'
+]
+var doc_metric_id = 2;
+var doc_metric_id_test = 3;
+//print_all_rooms()
+
+async function print_all_rooms(){
+  var value = await client.get({
+    id: doc_metric_id_test,
+    index: index_metric
+  })
+  console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
+  var data = value.body._source.data; 
+  for(var i in data){
+    console.log("."+i)
+    for(var room in data[i]["all_rooms"]){
+      console.log(".. "+room);     
+    }
+  }
+}
+//delete_document(index_metric,3);
+myfunc()
+
 var juzi_corp_name = "北京句子互动科技有限公司"
 async function myfunc(){
   var value = await client.get({
     id: 2,
     index: index_metric
   })
+  put_document(index_metric,value.body._source,3);
   console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
   var source = value.body._source; 
   var data = value.body._source.data; 
   var total_csv_data = []
   var total_detail_data = []
+  var sale_sum_time=0.0; 
+  var sale_over2mins=0; 
+  var sale_total_num = 0; 
+  var sales_detail_data = []
+  var sales_total_data = []
   for(var i in data){
     //console.log(JSON.stringify(i,null,4));
+    if(i==='童子铨')continue; //testing 
+    if(!all_sales.includes(i))continue;
     if(data[i]["role"]==="sales"){
       for(var room in data[i]["all_rooms"]){
         console.log("\nname: "+i+" room: "+room);     
@@ -343,7 +377,7 @@ async function myfunc(){
                 {range:{
                   "payload.timestamp": {
                     gte: "now-1d/d",
-                    lt: "now/d"
+                    lt: "now/s"
                   }
                 }}
               ]
@@ -354,24 +388,33 @@ async function myfunc(){
         //console.log(response);
         var to_reply = false; 
         var to_reply_msg_time = new Date(); //not know whether null is ok? 
-        var [crit_2_min_count,avg_time,total_num] = print_a_room(response);
-        
+        //OUTPUT TOTAL
+        var [crit_2_min_count,avg_time,total_num,snum,emnum,cnum] = print_a_room(response);
         console.log("crit_2_min_count,avg_time,total_num:"+[crit_2_min_count,avg_time,total_num]);
+        room = room.replace("句子互动服务群-",''); 
+        
         total_csv_data.push({
           name: i,
           room: room,
           over2mins: crit_2_min_count,
           avg: avg_time,
-          total:total_num
+          total:total_num,
+          snum:snum,
+          emnum:emnum,
+          cnum:cnum,
         })
-        // var room_output_data =  Array.from(output_room(response));
-        // total_detail_data = total_detail_data.concat(room_output_data)
+
+        //SALES TOTAL
+        sale_sum_time += avg_time*total_num;
+        sale_over2mins += crit_2_min_count; 
+        sale_total_num += total_num; 
+
+        //OUTPUT DETAIL
+        var room_output_data =  Array.from(output_room(response));
+        total_detail_data = total_detail_data.concat(room_output_data)
         // console.log("room_output_data:\n"+JSON.stringify(room_output_data,null,4));
         // console.log("room_output_data type:\n"+JSON.stringify(typeof room_output_data,null,4));
-        // room_output_data.forEach((element, index, array) => {
-        //   console.log(element); // 100, 200, 300
-          
-        // }); 
+        
         //not work 
         // for(var room_i; room_i<room_output_data.length; room_i++){
         //   console.log(room_output_data[room_i])
@@ -379,6 +422,25 @@ async function myfunc(){
         // }
         
       }
+      if(sale_total_num===0){
+        sales_total_data.push({
+          name: i,
+          over2mins: sale_over2mins,
+          avg: 0,
+          total:0
+        })
+      }else{
+        sales_total_data.push({
+          name: i,
+          over2mins: sale_over2mins,
+          avg: (sale_sum_time/sale_total_num).toFixed(2),
+          total:sale_total_num
+        })
+     }   
+      sale_sum_time=0.0;
+      sale_over2mins = 0;
+      sale_total_num = 0;
+
     }
   }
   //quit double loop 
@@ -388,10 +450,9 @@ async function myfunc(){
   console.log(total_detail_data)
   //console.log("room_output_data:\n"+JSON.stringify(total_detail_data,null,4));
   //msg_detail_output("detail_1_day"+s,total_detail_data)
-  total_output("total_"+s,total_csv_data);
-
+  //total_output("total_"+s,total_csv_data);
+  //sales_total_output("sales_"+s,sales_total_data); 
 }
-myfunc()
 //retrieve_id_from_channel(1032755)
 //retrieve_room_from_name("句子互动服务群-安徽节点信息")
 async function retrieve_room_from_name(room){
@@ -423,7 +484,6 @@ async function retrieve_id_from_channel(id){ //retrieve channel from id
   var data = value.body._source.data; 
   console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
   var qq = {
-
     query: {
       match: {
         "id":id
@@ -467,6 +527,17 @@ function is_from_customer(msg){
   return !all_sales.includes(msg._source.payload.fromInfo.payload.name) && //not sales
   (msg._source.payload.fromInfo.payload.corporation!==juzi_corp_name) //not employee
 }
+function is_from_sales(msg){
+  //console.log("is sales?"+all_sales.includes(msg._source.payload.fromInfo.payload.name));
+  //console.log("is employee?"+(msg._source.payload.fromInfo.payload.corporation===juzi_corp_name).toString());
+  return all_sales.includes(msg._source.payload.fromInfo.payload.name) 
+}
+function is_from_other_employee(msg){
+  //console.log("is sales?"+all_sales.includes(msg._source.payload.fromInfo.payload.name));
+  //console.log("is employee?"+(msg._source.payload.fromInfo.payload.corporation===juzi_corp_name).toString());
+  return !all_sales.includes(msg._source.payload.fromInfo.payload.name) && //not sales
+  (msg._source.payload.fromInfo.payload.corporation===juzi_corp_name) //is employee
+}
 function output_room(response){
   var to_reply = false; 
   var to_reply_msg_time = new Date(); //not know whether null is ok? 
@@ -486,6 +557,10 @@ function output_room(response){
     var ss = d.toLocaleDateString()
     var name = obj.fromInfo.payload.name; 
     var room = obj.roomInfo.topic; 
+    room = room.replace("句子互动服务群-",''); 
+    if(room === "句子"){
+      break;
+    }
     // if(print_msg){
     //   console.log(
     //     ss+" "+s+" "+obj.roomInfo.topic+" "+
@@ -520,6 +595,7 @@ function output_room(response){
             msg_customer:customer_msg,
             msg_reply:obj.text,
             reply_time:(replied_msg_time_sec/60).toFixed(2),
+            date:ss,
             time:s,
             msg_reply_id:obj.id,
           })
@@ -549,11 +625,15 @@ function print_a_room(response,print_msg=false){
   if(response.length===0){
     return([0,0,0])
   }
+  var snum=0,cnum=0,emnum=0; 
   for(var k=0; k<response.length;k++){
     var obj = response[k]._source.payload; 
     var d = new Date(obj.timestamp)
     var s = d.toLocaleTimeString()
     var ss = d.toLocaleDateString()
+    if(is_from_customer(response[k]))cnum+=1;
+    if(is_from_other_employee(response[k]))emnum+=1;
+    if(is_from_sales(response[k]))snum+=1; 
     if(print_msg){
     console.log(
       ss+" "+s+" "+obj.roomInfo.topic+" "+
@@ -583,7 +663,7 @@ function print_a_room(response,print_msg=false){
       }
     }
   var avg = (sum/response.length/60).toFixed(2)
-  return [crit_2_mins_count,avg,response.length]
+  return [crit_2_mins_count,avg,response.length,snum,emnum,cnum]
 }
 
 
@@ -620,11 +700,14 @@ function total_output(timerange,data){
   const csvWriter = createCsvWriter({
     path: sales_output_head+timerange+'total.csv',
     header: [
-      {id: 'name', title: 'Name'},
-      {id: 'room', title: 'Room'},
-      {id: 'over2mins', title: 'Exceed 2 Minute (times)'},
-      {id: 'avg', title: 'Average Reply Time (mins)'},
-      {id: 'total', title: 'Total Relpies (times)'},
+      {id: 'name', title: '销售名'},
+      {id: 'room', title: '群聊名'},
+      {id: 'over2mins', title: '回复超过2分钟次数'},
+      {id: 'avg', title: '平均回复时间（分钟）'},
+      {id: 'total', title: '总回复数'},
+      {id: 'snum', title: '销售总回复数'},
+      {id: 'emnum', title: '其他员工总回复数'},
+      {id: 'cnum', title: '顾客总回复数'},
     ]
   }); 
   csvWriter
@@ -632,18 +715,36 @@ function total_output(timerange,data){
   .then(()=> console.log('The CSV file was written successfully'));
 }
 
+function sales_total_output(timerange,data){
+  const csvWriter = createCsvWriter({
+    path: sales_output_head+timerange+'total.csv',
+    header: [
+      {id: 'name', title: '销售名'},
+      {id: 'over2mins', title: '回复超过2分钟次数'},
+      {id: 'avg', title: '平均回复时间（分钟）'},
+      {id: 'total', title: '总回复数'},
+    ]
+  }); 
+  csvWriter
+  .writeRecords(data)
+  .then(()=> console.log('The CSV file was written successfully'));
+}
+
+
+
 function msg_detail_output(timerange,data){
   const csvWriter = createCsvWriter({
     path: sales_output_head+timerange+'_room_detail.csv',
     header: [
-      {id: 'name', title: 'Name'},
-      {id: 'room', title: 'Room'},
-      {id: 'customer_name', title: 'Customer Name'},
-      {id: 'msg_customer', title: 'Customer Fisrt Message'},
-      {id: 'msg_reply', title: 'Sales Reply Message'},
-      {id: 'reply_time', title: 'Reply Time (min)'},
-      {id: 'time', title: 'Message Time'},
-      {id: 'msg_reply_id', title: 'Message ID'},
+      {id: 'name', title: '销售名'},
+      {id: 'room', title: '群聊名'},
+      {id: 'customer_name', title: '顾客名'},
+      {id: 'msg_customer', title: '顾客发送消息'},
+      {id: 'msg_reply', title: '销售回复消息'},
+      {id: 'reply_time', title: '回复时长（分钟）'},
+      {id: 'date', title: '回复日期'},
+      {id: 'time', title: '回复日期点'},
+      {id: 'msg_reply_id', title: '消息 ID'},
     ]
   });
   csvWriter
