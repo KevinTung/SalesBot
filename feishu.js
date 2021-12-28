@@ -82,7 +82,74 @@ lark.api.sendRequest(conf, req).then(r => {
 })
 
 
+async messageSendFile (conversationId: string, file: FileBox): Promise<string | void> {
+    const _mimeType = file.mimeType ? file.mimeType : ''
+    if (/image/i.test(_mimeType)) {
+      const token = await this.getTenantAccessToken(this.appId, this.appSecret)
+      const imageKey = await this.uploadImage(token, file)
+      const response = await axios({
+        data:
+        {
+          chat_id: conversationId,
+          content: {
+            image_key: imageKey,
+          },
+          msg_type: 'image',
+        },
+        headers: {
+          Authorization: 'Bearer ' + token,
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+        url: 'https://open.feishu.cn/open-apis/message/v4/send/',
+      })
+      if (response.data.code === '0') {
+        log.verbose('PuppetLark', 'messageSendFile', 'Successfully send image.')
+      } else {
+        log.error('Failed to send image:', response.data.msg)
+      }
+    }
+  }
 
+
+private async uploadImage (_token: string, image: FileBox): Promise<string> {
+    const _image = await image.toStream()
+    const formData = new FormData()
+    formData.append('image', _image)
+    formData.append('image_type', 'message')
+    const boundary = await formData.getBoundary()
+    const response = await axios({
+      data: formData,
+      headers: {
+        Authorization: 'Bearer ' + _token,
+        'Content-Type': 'multipart/form-data;boundary=' + boundary,
+      },
+      method: 'POST',
+      url: 'https://open.feishu.cn/open-apis/image/v4/put/',
+    })
+    if (response.data.code === 0) {
+      return response.data.data.image_key
+    } else {
+      return ''
+    }
+  }
+
+private async getTenantAccessToken (appId: string, appSecret: string): Promise<string> {
+    const response = await axios({
+      data:
+      {
+        app_id: appId,
+        app_secret: appSecret,
+      },
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+      url: 'https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal/',
+    })
+    const tenantAccessToken = response.data.tenant_access_token
+    return tenantAccessToken
+  }
 
 
 // async function uploadImage(imageType: 'message' | 'avatar', image: any) {
