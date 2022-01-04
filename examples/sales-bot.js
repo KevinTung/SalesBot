@@ -12,6 +12,36 @@ import qrcodeTerminal from 'qrcode-terminal'
 import { Client } from "@opensearch-project/opensearch"
 import { join } from 'path';
 
+import { PuppetLark } from 'wechaty-puppet-lark-2'
+
+import {
+  //EventMessagePayload,
+  MessageType,
+  FileBox,
+}                           from 'wechaty-puppet'
+const puppet = new PuppetLark({
+  larkServer: {
+    port: 1234,
+  },
+})
+
+puppet.start().catch(async e => {
+  console.error('Bot start() fail:', e)
+  // await puppet.stop()
+  process.exit(-1)
+})
+
+async function puppet_start(){
+  //const myfile = FileBox.fromFile('assets/sales_picture.png')
+  const target_roomid = "oc_f8bf4c888c663a7f3aac4ff3452bc3d4"
+  const myfile = FileBox.fromFile('assets/total_12212021.xls')
+  await puppet.messageSendXLSFile(target_roomid, myfile,'total_12212021.xls').catch(console.error)
+ // await puppet.messageSendText(target_roomid, 'dong')
+}
+puppet_start()
+
+
+
 //Create OpenSearch Javascript Client (borrowed from Official code) 
 
 "use strict"; //not sure
