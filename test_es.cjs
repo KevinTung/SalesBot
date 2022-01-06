@@ -105,6 +105,7 @@ async function search() {
   console.log(response.body);
 }
 
+//create_index("timer_info")
 async function create_index(index_name) {
   //given msg object, turn into JSON, and save in Opensearch DB, return? 
   var response = await client.indices.create({
@@ -309,6 +310,9 @@ async function query_document(index_name,query){
   console.log(response.body.hits.hits.length);
   return response.body.hits.hits;
 }
+
+
+
 var index_metric = "juzibot-sales-metric";
 var response_time = 60*1000
 //var all_sales = ['童子铨','曾璐','陈子曦','董森','冯伦','韩祥宇','宋宗强','王建超','曹啸']
@@ -336,15 +340,99 @@ async function print_all_rooms(){
   }
 }
 //delete_document(index_metric,3);
-myfunc()
+//myfunc()
 
 var juzi_corp_name = "北京句子互动科技有限公司"
+
+async function check_timeout(){
+  //if this time is cus, write timer; if last time is cus and this time is sales, clean timer 
+  var value = await client.get({
+    id: 2,
+    index: index_metric
+  })
+  console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
+  var room = '句子×booming执行群'
+  var source = value.body._source; 
+  var data = value.body._source.data; 
+ var room_data = data["曹啸"]["all_rooms"]["句子×booming执行群"];
+  var qq = {
+          sort:[
+            {"payload.timestamp":{"order":"asc"}}
+          ],
+          size:1000,
+          query: {
+            bool:{
+              must:[
+                {match: {
+                  "payload.roomInfo.topic.keyword":room
+                }},
+                // {range:{
+                //   "payload.timestamp": {
+                //     gte: "now-1d/d",
+                //     lt: "now/s"
+                //   }
+                // }}
+              ]
+            }
+          }
+        }
+    var response = await query_document(index_name,qq);
+    //console.log(response)
+    // for(var k=0; k<response.length;k++){
+    var k = response.length-1;
+      var obj = response[k]._source.payload; 
+      var d = new Date(obj.timestamp)
+      var s = d.toLocaleTimeString()
+      var ss = d.toLocaleDateString()
+      if(is_from_customer(response[k]) && this_time_is_sales_or_employee){ //last is customer, clean timeout
+        // var tolerate_time = 2000;
+        //   let mytimer = setTimeout(() => {  //msg.say('超过'+ (tolerate_time/1000).toString()+'秒没回');  
+        //     console.log('超过'+ (tolerate_time/1000).toString()+'秒没回')
+        //    }, tolerate_time);
+        //   room_data["timer"] = mytimer
+        clearTimeout(room_data["timer"]);
+      }else if(is_from_other_employee(response[k])){
+        //nothing
+      }else if(is_from_sales(response[k])){
+       //nothing
+      } 
+      // if(print_msg){
+      console.log(
+        ss+" "+s+" "+obj.roomInfo.topic+" "+
+        obj.fromInfo.payload.name+
+        ":"+
+        obj.text + " "
+        );
+      // }
+      // if(is_from_customer(response[k])){
+      //   if(to_reply===false){
+      //     //console.log("1st from customer ")
+      //     to_reply = true; 
+      //     to_reply_msg_time = d
+      //   }
+      // }else{
+      //   if(to_reply===true){
+      //     //console.log("1st reply")
+      //     to_reply = false
+      //     var replied_msg_time_sec = (d - to_reply_msg_time) /1000  //this - is ok? 
+      //     //console.log("replied: "+replied_msg_time)
+      //     //console.log("replied: "+Math.floor(replied_msg_time_sec/60)+" minutes and "+replied_msg_time_sec%60+" sec")
+      //     if(replied_msg_time_sec > time_threshold_min * 60){
+      //       crit_2_mins_count+=1; 
+      //     }
+      //     sum += replied_msg_time_sec; 
+      //   }
+      // }
+    // }
+    put_document(index_metric,value.body._source,3);
+}
+//check_timeout()
 async function myfunc(){
   var value = await client.get({
     id: 2,
     index: index_metric
   })
-  put_document(index_metric,value.body._source,3);
+  //put_document(index_metric,value.body._source,3);
   console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
   var source = value.body._source; 
   var data = value.body._source.data; 
@@ -475,14 +563,41 @@ async function retrieve_room_from_name(room){
     console.log("is not a room")
   }
 }
+
+
+
+const dividers = ["------","- - - - - - - - - - - - - - -"]
+var testdiv = ""
+retrieve_id_from_channel(1122788)
+function serialize_beautify_msg(texts){
+  
+}
+
+function beautify(text){
+  var a = text.split(dividers[0])
+  var b = []
+  console.log(a,a.length)
+  for(var i=0; i<a.length; i++){
+
+    console.log(i,a[i])
+    var c = a[i].split(dividers[1])
+    console.log("splt:",c)
+    b = b.concat(c)
+  }
+  console.log(b,b.length)
+  return b[-1]
+}
+
 async function retrieve_id_from_channel(id){ //retrieve channel from id 
+
+  //Retrieve ID MSG
   var value = await client.get({
     id: 2,
     index: index_metric
   })
   var source = value.body._source; 
   var data = value.body._source.data; 
-  console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
+  //console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
   var qq = {
     query: {
       match: {
@@ -491,7 +606,10 @@ async function retrieve_id_from_channel(id){ //retrieve channel from id
     }
   }
   var response = await query_document(index_name,qq);
-  console.log(response.length);
+  //console.log("RES:",response[0]._source.payload.text);
+  beautify(response[0]._source.payload.text)
+
+  //PRINT WHOLE ROOM
   if(response.length==1){
     var obj = response[0]._source.payload; 
     var room = obj.roomInfo.topic
@@ -509,7 +627,7 @@ async function retrieve_id_from_channel(id){ //retrieve channel from id
         }
       }
       var channel_response = await query_document(index_name,qq1);
-      print_a_room(channel_response);
+      //print_a_room(channel_response);
     }else{
       console.log("is not a room")
     }

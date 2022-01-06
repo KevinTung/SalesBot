@@ -35,7 +35,7 @@ async function puppet_start(){
   //const myfile = FileBox.fromFile('assets/sales_picture.png')
   const target_roomid = "oc_f8bf4c888c663a7f3aac4ff3452bc3d4"
   const myfile = FileBox.fromFile('assets/total_12212021.xls')
-  await puppet.messageSendXLSFile(target_roomid, myfile,'total_12212021.xls').catch(console.error)
+  //await puppet.messageSendXLSFile(target_roomid, myfile,'total_12212021.xls').catch(console.error)
  // await puppet.messageSendText(target_roomid, 'dong')
 }
 puppet_start()
@@ -63,8 +63,11 @@ var client = new Client({
 //put document into opensearch 
 var index_name = "juzibot-sales-msg-v2-4";
 var index_metric = "juzibot-sales-metric-test";
+// var index_timer_info = "timer_info"
+
 var doc_metric_id = 3;
 var doc_metric_id_test = 3;
+// var doc_timer_info = 10; 
 var juzi_corp_name = "北京句子互动科技有限公司"
 async function put_document(index_name, document, id) {
   // Add a document to the index.
@@ -114,11 +117,13 @@ function onLogout(user) {
 var iii = 0;
 var all_sales = [
   // '童子铨','曾璐','陈子曦','董森','冯伦','韩祥宇','宋宗强','王建超'
-  '曾璐','董森','宋宗强','陈子曦','冯伦','尹伯昊','李传君','李添','刘珉','孙文博','齐全喜'
+  '曾璐','董森','宋宗强','陈子曦','冯伦','尹伯昊','李传君','刘珉','孙文博','齐全喜'
   ,'陶好','田野','吴强强','王生良'
 ]
 
-
+var timer_set_count = 0;
+var timer_cancel_count = 0;
+var timeout_count = 0;
 var index_metric = "juzibot-sales-metric";
 async function onMessage(msg) {
   log.info('StarterBot', msg.toString());
@@ -149,12 +154,14 @@ async function onMessage(msg) {
         
     //     console.log("final\n"+JSON.stringify(value.body._source,null,4));
     //  });
-  
+  var room_or_name = null
   if (msg.room() == null) {
     msg._payload.roomInfo = {};
     msg._payload.toInfo = rename_payload(msg.to());
+    room_or_name = msg.from().name()
   } else {
     var room_name = await msg.room().topic();
+    room_or_name = room_name
     var value = await client.get({
       id: doc_metric_id,
       index: index_metric
@@ -263,7 +270,7 @@ async function onMessage(msg) {
         console.log("error:room not captured");
       }
       //put the new index back
-      put_document(index_metric,value.body._source, doc_metric_id_test);
+      // put_document(index_metric,value.body._source, doc_metric_id_test);
 
     msg._payload.toInfo = {};
     var new_room = rename_payload(msg.room());
@@ -274,15 +281,65 @@ async function onMessage(msg) {
     msg._payload.roomInfo = new_room;
   }
 
+
   //if msg from customers, set timer, need to reply in t seconds 
   var memcorp = await msg.from().corporation();
   //if(memcorp !== juzi_corp_name &&!all_sales.includes(msg.from().name()) ){
-  var tolerate_time = 2000;
-  if(msg.from().name()=='童子铨'){
-    setTimeout(() => {  msg.say('超过'+ (tolerate_time/1000).toString()+'秒没回');   }, tolerate_time);
+  var tolerate_time = 10000.0;
+  const target_roomid = "oc_f8bf4c888c663a7f3aac4ff3452bc3d4" 
+  const BBIWY_group_id = "oc_a1f098656192c592e21aae7175219d46"
+  //room_or_name = "句子互动 维诺娜&句客宝"
+
+  
+  var room_obj = data[msg.from().name()]['all_rooms'][room_name]
+  //var tzq1st = 0;
+  // if(tzq1st == 0){
+  //   tzq1st+=1;
+
+  var commands = ["cancel"]
+  if ( (memcorp !== juzi_corp_name) && !commands.includes(msg._payload.text)){ //not employee, i.e. customer
+    //if timer is off, then start timer, else no actions
+    console.log("customer request!!")
+    console.log(room_obj)
+
+    if(!Object.keys(room_obj).includes("timerID")){ //init
+      console.log("init data structure!!")
+      room_obj["timerID"] = "" //need to make sure data type is right
+      //room_obj["timerAlive"] = false;
+      room_obj["timer_timestamp"] = 0
+    }
+    var timer_timestamp = new Date(room_obj["timer_timestamp"]) //maintain the init time of last timer
+    var current_time = new Date(msg._payload.timestamp)
+    console.log("current timer, last timer:",current_time,timer_timestamp)
+    if(current_time-timer_timestamp > tolerate_time){ //timer must be dead. can init new timer
+    console.log("timerAlive false, new timer!!")
+      let mytimer = setTimeout(() => {  
+        //msg.say('超过'+ (tolerate_time/1000).toString()+'秒没回');  
+        var s = "【"+msg.from().name()+"】在【"+room_or_name+"】已超过【"+ ((tolerate_time/1000/60).toFixed(2).toString()) +"】分钟没回";
+        puppet.messageSendText(BBIWY_group_id,s);
+        timeout_count += 1; 
+      }, tolerate_time);
+
+      room_obj["timerID"] = mytimer[Symbol.toPrimitive]()
+      room_obj["timer_timestamp"] = msg._payload.timestamp 
+      timer_set_count += 1; 
+    }
+    console.log("AFTER:",room_obj)
+   
+  }else{ //employee
+    console.log("employee reply!")
+    console.log("BEFORE:",room_obj)
+    var timer_timestamp = new Date(room_obj["timer_timestamp"]) //maintain the init time of last timer
+    var current_time = new Date(msg._payload.timestamp)
+    console.log("current timer, last timer:",current_time,timer_timestamp)
+    if(current_time-timer_timestamp < tolerate_time){ //if timer is on, then turn off timer
+      clearTimeout(room_obj["timerID"])
+      timer_cancel_count += 1
+    }
+     console.log("AFTER:",room_obj)
   }
-
-
+  console.log("timer set, cancel, timeout count:",timer_set_count," ",timer_cancel_count," ",timeout_count)
+  put_document(index_metric,value.body._source, doc_metric_id_test);
 
   var new_msg = rename_payload(msg);
   log.info('StarterBot','after\n'+JSON.stringify(new_msg));

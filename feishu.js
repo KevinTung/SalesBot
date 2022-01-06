@@ -6,12 +6,14 @@ var file_body = {
     'file_name':'total_Tue, Dec 21, 2021total.csv'
 }
 
+const BBIWY_group_id = "oc_a1f098656192c592e21aae7175219d46"
+const bot_test_group_id = "oc_f8bf4c888c663a7f3aac4ff3452bc3d4"
 
 async function sendMessage() {
   let lark = new Feishu('cli_a11cb78f1a78900b', 'v8EDxzVdkIipoEaIVtrqfgUoCWsrB1vB');
 
     let {groups} = await lark.bot.group.getList();
-
+  console.log(groups)
   let chatIds = groups.map(group => group.chat_id);
   
   let {message_id} = await lark.message.send({
@@ -36,8 +38,8 @@ async function sendMessage() {
 sendMessage();
 
 
-const myfile = FileBox.fromFile('download.png')
-    await puppet.messageSendFile(msgPayload.fromId!, myfile).catch(console.error)
+// const myfile = FileBox.fromFile('download.png')
+//     await puppet.messageSendFile(msgPayload.fromId!, myfile).catch(console.error)
 
 
 // import lark from "@larksuiteoapi/allcore";
