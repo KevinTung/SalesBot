@@ -78,3 +78,4 @@ log
 .env
 .env.*
 data/
+all_output/

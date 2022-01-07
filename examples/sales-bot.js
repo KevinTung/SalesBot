@@ -155,7 +155,7 @@ async function onMessage(msg) {
     //     console.log("final\n"+JSON.stringify(value.body._source,null,4));
     //  });
   var room_or_name = null
-  if (msg.room() == null) {
+  if (msg.room() == null) { //from individual or group? 
     msg._payload.roomInfo = {};
     msg._payload.toInfo = rename_payload(msg.to());
     room_or_name = msg.from().name()

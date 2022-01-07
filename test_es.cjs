@@ -566,38 +566,38 @@ async function retrieve_room_from_name(room){
 
 
 
-const dividers = ["------","- - - - - - - - - - - - - - -"]
-var testdiv = ""
+// const dividers = ["------","- - - - - - - - - - - - - - -"]
+// var testdiv = ""
 retrieve_id_from_channel(1122788)
-function serialize_beautify_msg(texts){
+// function serialize_beautify_msg(texts){
   
-}
+// }
 
-function beautify(text){
-  var a = text.split(dividers[0])
-  var b = []
-  console.log(a,a.length)
-  for(var i=0; i<a.length; i++){
+// function beautify(text){
+//   var a = text.split(dividers[0])
+//   var b = []
+//   console.log(a,a.length)
+//   for(var i=0; i<a.length; i++){
 
-    console.log(i,a[i])
-    var c = a[i].split(dividers[1])
-    console.log("splt:",c)
-    b = b.concat(c)
-  }
-  console.log(b,b.length)
-  return b[-1]
-}
+//     console.log(i,a[i])
+//     var c = a[i].split(dividers[1])
+//     console.log("splt:",c)
+//     b = b.concat(c)
+//   }
+//   console.log(b,b.length)
+//   return b[-1]
+// }
 
 async function retrieve_id_from_channel(id){ //retrieve channel from id 
 
   //Retrieve ID MSG
   var value = await client.get({
-    id: 2,
+    id: 3,
     index: index_metric
   })
   var source = value.body._source; 
   var data = value.body._source.data; 
-  //console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
+  console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
   var qq = {
     query: {
       match: {
