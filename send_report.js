@@ -55,9 +55,9 @@ async function puppet_start(){
      //   puppet.messageSendText(target_roomid, '超过'+ (tolerate_time/1000).toString()+'秒没回')  
      // }, tolerate_time);
      // }
-     let timerID = setTimeout(() => {  
-      myfunc()
-     }, tolerate_time);
+    //  let timerID = setTimeout(() => {  
+    //   myfunc()
+    //  }, tolerate_time);
      
      //timer2 = JSON.parse(JSON.stringify(timer))
      // clearTimeout(timerID[Symbol.toPrimitive]())
@@ -66,6 +66,16 @@ async function puppet_start(){
 
 }
 puppet_start()
+var vv = await puppet.roomList()
+for(var i in vv){
+  console.log(vv[i]["chat_id"])
+  var tt = await puppet.roomMemberList(vv[i]["chat_id"])
+  console.log(tt)
+}
+console.log(vv)
+
+
+
 
 "use strict"; //what's this?
 var host = "localhost";
@@ -99,91 +109,9 @@ var client = new Client({
   },
 });
 
-async function search() {
-  // Create an index with non-default settings.
-
-  var index_name = "books";
-  var settings = {
-    settings: {
-      index: {
-        number_of_shards: 4,
-        number_of_replicas: 3,
-      },
-    },
-  };
-
-  var response = await client.indices.create({
-    index: index_name,
-    body: settings,
-  });
-
-  console.log("Creating index:");
-  console.log(response.body);
-
-  // Add a document to the index.
-  var document = {
-    title: "The Outsider",
-    author: "Stephen King",
-    year: "2018",
-    genre: "Crime fiction",
-  };
-
-  var id = "1";
-
-  var response = await client.index({
-    id: id,
-    index: index_name,
-    body: document,
-    refresh: true,
-  });
-
-  console.log("Adding document:");
-  console.log(response.body);
-
-  // Search for the document.
-  var query = {
-    query: {
-      match: {
-        title: {
-          query: "The Outsider",
-        },
-      },
-    },
-  };
-
-  var response = await client.search({
-    index: index_name,
-    body: query,
-  });
-
-  console.log("Search results:");
-  console.log(response.body.hits);
-
-  // Delete the document.
-  var response = await client.delete({
-    index: index_name,
-    id: id,
-  });
-
-  console.log("Deleting document:");
-  console.log(response.body);
-
-  // Delete the index.
-  var response = await client.indices.delete({
-    index: index_name,
-  });
-
-  console.log("Deleting index:");
-  console.log(response.body);
-}
 
 var index_name = "juzibot-sales-msg-v2-4";
-var query = {
-  query: {
-    match_all: {
-    },
-  },
-};
+var index_metric = "juzibot-sales-metric";
 async function query_document(index_name,query){
   // Search for the document.
   
@@ -195,15 +123,12 @@ async function query_document(index_name,query){
   console.log(response.body.hits.hits.length);
   return response.body.hits.hits;
 }
-var index_metric = "juzibot-sales-metric";
-var response_time = 60*1000
+
 var all_sales = [
-  '曾璐','董森','宋宗强','陈子曦','冯伦','尹伯昊','李传君','李添','刘珉','孙文博','齐全喜'
-  ,'陶好','田野','吴强强','王生良'
+  // ,'曾璐','陈子曦','董森','冯伦','韩祥宇','宋宗强','王建超'
+  '童子铨', '董森', '宋宗强', '陈子曦', '冯伦', '李传君', '吴强强'
 ]
-var doc_metric_id = 2;
-var doc_metric_id_test = 3;
-//print_all_rooms()
+var doc_metric_id = 4;
 var juzi_corp_name = "北京句子互动科技有限公司"
 
 
@@ -212,7 +137,7 @@ async function myfunc(){
     id: 3,
     index: index_metric
   })
-  //put_document(index_metric,value.body._source,3);
+  //put_document(index_metric,value.body._source,doc_metric_id);
   console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
   var source = value.body._source; 
   var data = value.body._source.data; 
@@ -244,7 +169,7 @@ async function myfunc(){
                 }},
                 {range:{
                   "payload.timestamp": {
-                    gte: "now-1d/d",
+                    gte: "now-1d/s",
                     lt: "now/s"
                   }
                 }}
@@ -260,17 +185,18 @@ async function myfunc(){
         var [crit_2_min_count,avg_time,total_num,snum,emnum,cnum] = print_a_room(response);
         console.log("crit_2_min_count,avg_time,total_num:"+[crit_2_min_count,avg_time,total_num]);
         room = room.replace("句子互动服务群-",''); 
-        
-        total_csv_data.push({
-          name: i,
-          room: room,
-          over2mins: crit_2_min_count,
-          avg: avg_time,
-          total:total_num,
-          snum:snum,
-          emnum:emnum,
-          cnum:cnum,
-        })
+        if(total_num!==0){
+          total_csv_data.push({
+            name: i,
+            room: room,
+            over2mins: crit_2_min_count,
+            avg: avg_time,
+            total:total_num,
+            snum:snum,
+            emnum:emnum,
+            cnum:cnum,
+          })
+        }
 
         //SALES TOTAL
         sale_sum_time += avg_time*total_num;
@@ -290,14 +216,15 @@ async function myfunc(){
         // }
         
       }
-      if(sale_total_num===0){
-        sales_total_data.push({
-          name: i,
-          over2mins: sale_over2mins,
-          avg: 0,
-          total:0
-        })
-      }else{
+      // if(sale_total_num===0){
+      //   sales_total_data.push({
+      //     name: i,
+      //     over2mins: sale_over2mins,
+      //     avg: 0,
+      //     total:0
+      //   })
+      // }else{
+      if(sale_total_num !== 0){
         sales_total_data.push({
           name: i,
           over2mins: sale_over2mins,
@@ -344,7 +271,7 @@ async function myfunc(){
 
 async function print_all_rooms(){
   var value = await client.get({
-    id: doc_metric_id_test,
+    id: doc_metric_id,
     index: index_metric
   })
   console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
@@ -356,9 +283,43 @@ async function print_all_rooms(){
     }
   }
 }
+//print_all_rooms() COMMAND
+// room_manipulation() COMMAND
+async function room_manipulation(){
+  var value = await client.get({
+    id: doc_metric_id,
+    index: index_metric
+  })
+  //console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
+  var data = value.body._source.data; 
+  // console.log(data['田野']["all_rooms"]["句子互动服务群-通天星"])
+  // console.log(data['']
+  
+  var delete_list = ["曾璐","田野","秋","江湖小麻雀","小圆圆","Rt-黄蕾","ggoba","曹啸"]
+  for(var i in delete_list){  
+    delete data[delete_list[i]]
+  }
+  for(var i in data){
+    console.log("."+i)
+    for(var room in data[i]["all_rooms"]){
+      console.log(".. "+room);     
+    }
+  }
+  put_document(index_metric,value.body._source,doc_metric_id)
+}
 
 
-
+async function put_document(index_name,document,id){
+  // Add a document to the index.
+  var response = await client.index({
+    id: id,
+    index: index_name,
+    body: document,
+    refresh: true,
+  });
+  console.log("Adding document:");
+  console.log(response.body);
+}
 function print_a_room(response,print_msg=false){
   var to_reply = false; 
   var to_reply_msg_time = new Date(); //not know whether null is ok? 
@@ -411,15 +372,25 @@ function print_a_room(response,print_msg=false){
 
 
 const dividers = ["------","- - - - - - - - - - - - - - -"]
-var testdiv = ""
-function serialize_beautify_msg(texts){
 
-}
 
 function beautify_msg(text){
-     return text
+     return beautify(text)
 }
-
+function beautify(text){
+  var a = text.split(dividers[0])
+  var b = []
+  console.log(a,a.length)
+  for(var i=0; i<a.length; i++){
+    console.log(i,a[i])
+    var c = a[i].split(dividers[1])
+    console.log("splt:",c)
+    b = b.concat(c)
+  }
+  var d = b[b.length-1].split("\n")
+  console.log(d,"returning:",d[d.length-1]) 
+  return d[d.length-1]
+}
 function output_room(response){
   var to_reply = false; 
   var to_reply_msg_time = new Date(); //not know whether null is ok? 
@@ -459,7 +430,7 @@ function output_room(response){
             reply_time:-1,
             date:ss,
             time:s,
-            tag:"customer message",
+            tag:"顾客首次消息",
             msg_id:obj.id,
           }); 
       }
@@ -473,7 +444,7 @@ function output_room(response){
             reply_time:-1,
             date:ss,
             time:s,
-            tag:"customer message",
+            tag:"顾客接续消息",
             msg_id:obj.id,
           });
      }
@@ -492,13 +463,13 @@ function output_room(response){
           room_output_data.push({
             name:name,
             room:room,
-            customer_name:customer_name,
+            customer_name:"",
             msg_customer:"",
             msg_reply:beautify_msg(obj.text),
             reply_time:(replied_msg_time_sec/60).toFixed(2),
             date:ss,
             time:s,
-            tag:"sales delayed reply", 
+            tag:"销售首次回复", 
             msg_id:obj.id,
           })
         }

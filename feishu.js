@@ -1,4 +1,48 @@
 import {Feishu} from 'lark-js-sdk';
+//LARK PUPPET
+import { PuppetLark } from 'wechaty-puppet-lark-2'
+
+import {
+  //EventMessagePayload,
+  MessageType,
+  FileBox,
+}                           from 'wechaty-puppet'
+const puppet = new PuppetLark({
+  larkServer: {
+    port: 1235,
+  },
+})
+
+puppet.start().catch(async e => {
+  console.error('Bot start() fail:', e)
+  // await puppet.stop()
+  process.exit(-1)
+})
+
+async function puppet_start(){
+  //const myfile = FileBox.fromFile('assets/sales_picture.png')
+  const target_roomid = "oc_f8bf4c888c663a7f3aac4ff3452bc3d4"
+  const myfile = FileBox.fromFile('assets/total_12212021.xls')
+  //await puppet.messageSendXLSFile(target_roomid, myfile,'total_12212021.xls').catch(console.error)
+  //await puppet.messageSendXLSFile(target_roomid, myfile,'total_12212021.xls').catch(console.error)
+  console.log("HIIII")
+  var tolerate_time = 3000;
+     // if(msg.from().name()=='童子铨'){
+     // setInterval(() => {  
+     //   puppet.messageSendText(target_roomid, '超过'+ (tolerate_time/1000).toString()+'秒没回')  
+     // }, tolerate_time);
+     // }
+    //  let timerID = setTimeout(() => {  
+    //   myfunc()
+    //  }, tolerate_time);
+     
+     //timer2 = JSON.parse(JSON.stringify(timer))
+     // clearTimeout(timerID[Symbol.toPrimitive]())
+     // console.log(timerID[Symbol.toPrimitive]())
+ // await puppet.messageSendText(target_roomid, 'dong')
+
+}
+puppet_start()
 
 
 var file_body = {
@@ -13,16 +57,23 @@ async function sendMessage() {
   let lark = new Feishu('cli_a11cb78f1a78900b', 'v8EDxzVdkIipoEaIVtrqfgUoCWsrB1vB');
 
     let {groups} = await lark.bot.group.getList();
-  console.log(groups)
+   console.log(groups)
   let chatIds = groups.map(group => group.chat_id);
   
-  let {message_id} = await lark.message.send({
-      chat_id: "oc_f8bf4c888c663a7f3aac4ff3452bc3d4",
-      msg_type: 'text',
-      content: {text: 'I am gonna rule the world hhhhhhhh'},
-    });
- console.log(`Message (${message_id}) sent!`);
-
+  // for(var i in sales2chat){
+    let {message_id} = await lark.message.send({
+        chat_id: alert_group ,
+        msg_type: 'text',
+        content: {text: 'hi~ 我是sales-assistant, 以后会负责辅助各位的销售，请多多指教~'},
+      });
+    console.log(`Message (${message_id}) sent!`);
+  // }
+  // let {message_id} = await lark.message.send({
+  //         chat_id: "oc_7ff99d4403ba04a6129dfb737e24739f",
+  //         msg_type: 'text',
+  //         content: {text: '是的～'},
+  //       });
+  //     console.log(`Message (${message_id}) sent!`);
   for (let chatId of chatIds) {
      console.log(chatId)
     // let {message_id} = await lark.message.send({
@@ -34,8 +85,59 @@ async function sendMessage() {
     //console.log(`Message (${message_id}) sent!`);
   }
 }
-
 sendMessage();
+// var vv = await puppet.roomList()
+// for(var i in vv){
+//   console.log("VVI:",vv[i])
+//   var tt = await puppet.roomMemberList(vv[i]["chat_id"])
+//   console.log("TT:",tt)
+// }
+var all_sales = [
+  '童子铨', '董森', '宋宗强', '陈子曦', '冯伦', '李传君', '吴强强'
+]
+var alert_group = "oc_151f493e3d8b15ded4b41520a84a2739"
+var sales2chat = {
+  '董森':"oc_7ff99d4403ba04a6129dfb737e24739f", 
+  '宋宗强':"oc_df395b0182a51cec39b09f81534a09f2", 
+  '陈子曦':"oc_e75a4dcf83bb049b2cf8b3268d097f75", 
+  '冯伦':"oc_6e7e17eb110be8b22c45fa1f84a92fe1", 
+  '李传君':"oc_a67d0ad8d2eee6520217ba5f5ab59879", 
+  '吴强强':"oc_94d5b1536c35c5bb0e2474d6c5a10d69"
+}
+
+var openids = ["ou_0f9275a03912ea9a1df52d9f13902ec1","ou_69332016ab8dc36da17dad017a273712"]
+// console.log(vv)
+let lark = new Feishu('cli_a11cb78f1a78900b', 'v8EDxzVdkIipoEaIVtrqfgUoCWsrB1vB');
+// var x = "ou_70f5fc9073aaf6cfb7571242aa88d863"
+// let {groups} = await lark.bot.group.getList();
+// lark.contact.user.getInfos('employee_ids', ["ou_70f5fc9073aaf6cfb7571242aa88d863"]).then(data=>{
+//   console.log(data)
+// })
+
+// for(var i in openids){
+// await lark.message.send(
+//   {
+//     open_id:openids[i],
+//     msg_type: 'text',
+//     content: {
+//       text: "hii"
+//     }
+//   }
+// );
+// }
+
+// lark.contact.user
+//   .add({
+//     name: '童子铨',
+//     mobile: '13141367789',
+//     department_ids: ['od-234355343342acdbef33'],
+//     need_send_notification: true,
+//   })
+//   .then(data => {
+//     let {user_info} = data;
+
+//     console.log('User added:', user_info);
+//   });
 
 
 // const myfile = FileBox.fromFile('download.png')

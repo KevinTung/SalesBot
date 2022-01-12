@@ -321,13 +321,13 @@ var all_sales = [
   '曾璐','董森','宋宗强','陈子曦','冯伦','尹伯昊','李传君','李添','刘珉','孙文博','齐全喜'
   ,'陶好','田野','吴强强','王生良'
 ]
-var doc_metric_id = 2;
-var doc_metric_id_test = 3;
+var doc_metric_id = 4;
+
 //print_all_rooms()
 
 async function print_all_rooms(){
   var value = await client.get({
-    id: doc_metric_id_test,
+    id: doc_metric_id,
     index: index_metric
   })
   console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
@@ -424,7 +424,7 @@ async function check_timeout(){
       //   }
       // }
     // }
-    put_document(index_metric,value.body._source,3);
+    put_document(index_metric,value.body._source,doc_metric_id);
 }
 //check_timeout()
 async function myfunc(){
@@ -432,7 +432,7 @@ async function myfunc(){
     id: 2,
     index: index_metric
   })
-  //put_document(index_metric,value.body._source,3);
+  //put_document(index_metric,value.body._source,doc_metric_id);
   console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
   var source = value.body._source; 
   var data = value.body._source.data; 
@@ -568,7 +568,7 @@ async function retrieve_room_from_name(room){
 
 // const dividers = ["------","- - - - - - - - - - - - - - -"]
 // var testdiv = ""
-retrieve_id_from_channel(1122788)
+//retrieve_id_from_channel(1122788)
 // function serialize_beautify_msg(texts){
   
 // }
@@ -587,6 +587,19 @@ retrieve_id_from_channel(1122788)
 //   console.log(b,b.length)
 //   return b[-1]
 // }
+//print_metric()
+async function print_metric(){
+  var value = await client.get({
+    id: 3,
+    index: index_metric
+  })
+  var source = value.body._source; 
+  var data = value.body._source.data; 
+  console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
+  for(var i in data){
+    print(i)
+  }
+}
 
 async function retrieve_id_from_channel(id){ //retrieve channel from id 
 
@@ -607,7 +620,7 @@ async function retrieve_id_from_channel(id){ //retrieve channel from id
   }
   var response = await query_document(index_name,qq);
   //console.log("RES:",response[0]._source.payload.text);
-  beautify(response[0]._source.payload.text)
+  // beautify(response[0]._source.payload.text)
 
   //PRINT WHOLE ROOM
   if(response.length==1){
@@ -940,7 +953,7 @@ function room_output(timerange,name,room,data){
 //   value.body._source["rooms_count"] = all_room_count; 
 
 //   console.log("after"+JSON.stringify(value.body._source,null,4));
-//   put_document(index_metric,value.body._source,2);
+//   put_document(index_metric,value.body._source,doc_metric_id);
 // })
 
 
