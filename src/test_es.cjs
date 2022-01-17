@@ -3,7 +3,7 @@ var host = "localhost";
 var protocol = "https";
 var port = 9200;
 var auth = "admin:admin"; // For testing only. Don't store credentials in code.
-var ca_certs_path = "./root-ca.pem";
+// var ca_certs_path = "./root-ca.pem";
 
 // Optional client certificates if you don't want to use HTTP basic authentication.
 // var client_cert_path = '/full/path/to/client.pem'

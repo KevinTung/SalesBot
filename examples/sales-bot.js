@@ -8,7 +8,8 @@ import {
   ScanStatus,
   log,
 } from 'wechaty'
-
+import {Feishu} from 'lark-js-sdk';
+let lark = new Feishu('cli_a11cb78f1a78900b', 'v8EDxzVdkIipoEaIVtrqfgUoCWsrB1vB');
 import qrcodeTerminal from 'qrcode-terminal'
 import { Client } from "@opensearch-project/opensearch"
 import { join } from 'path';
@@ -134,49 +135,46 @@ var sales2chat = {
 var timer_set_count = 0;
 var timer_cancel_count = 0;
 var timeout_count = 0;
+var mycard =  {
+  "config": {
+    "wide_screen_mode": true
+  },
+  "elements": [
+    {
+      "tag": "markdown",
+      "content": ""
+    }
+  ],
+  "header": {
+    "template": "orange",
+    "title": {
+      "content": "超时提醒⏰",
+      "tag": "plain_text"
+    }
+  }
+}
 
-
+const target_roomid = "oc_f8bf4c888c663a7f3aac4ff3452bc3d4"
+const BBIWY_group_id = "oc_a1f098656192c592e21aae7175219d46"
 //ASSERT: for any group with sales-bot, there is one sales. 
 async function onMessage(msg) { 
   log.info('StarterBot', msg.toString());
-console.log("MSG:",msg.toString())
+  console.log("MSG:",msg.toString())
   msg._payload.fromInfo = rename_payload(msg.from());
 
 var room_sales
 var room_name
 
 
-  
-
-
-
-  // client.get({//改掉，改成await
-  //   id: 2,
-  //   index: "juzibot-sales-metric"
-  // }).then(function(value) {  //在銷售主動發消息時開始錄入
-  //   //console.log("before_final\n"+JSON.stringify(value.body._source,null,4));
-  //     //console.log(JSON.stringify(value.body._source,null,4));
-  //     //value.body._source.all_sales["童子铨"].customer1["criteria:later-than-3-seconds"].count +=1;
-  //     //take namelist of sales and customer, if there isn't create a new one (sales to customer : one to many)
-  //     if(!Object.keys(value.body._source).includes(msg.from().name())){//create one name 
-  //       console.log('new name');
-  //       value.body._source[msg.from().name()]={'all_rooms':[]}; 
-  //     }
-  //     //assert the name is successfully created
-
-  //     if(!Object.keys(value.body._source[msg.from().name()]['all_rooms']).includes(room_name)){
-  //       console.log('new room')
-  //       value.body._source[msg.from().name()]['all_rooms'].push({[room_name]:{}});
-  //     }
-
-  //     console.log("final\n"+JSON.stringify(value.body._source,null,4));
-  //  });
   var value;
+  console.log("MSG1")
   if (msg.room() == null) { //from individual or group? 
+    console.log("MSG2")
     msg._payload.roomInfo = {};
     msg._payload.toInfo = rename_payload(msg.to());
     room_name = msg.from().name()
   } else {
+    console.log("MSG3")
     room_name = await msg.room().topic();
     //search for the sales
     if(all_sales.includes(msg.from().name())){
@@ -323,9 +321,8 @@ var room_name
   //if msg from customers, set timer, need to reply in t seconds 
   var memcorp = await msg.from().corporation();
   //if(memcorp !== juzi_corp_name &&!all_sales.includes(msg.from().name()) ){
-  var tolerate_time = 120000.0;
-  const target_roomid = "oc_f8bf4c888c663a7f3aac4ff3452bc3d4"
-  const BBIWY_group_id = "oc_a1f098656192c592e21aae7175219d46"
+  var tolerate_time = 600*1000.0;
+  
   //room_or_name = "句子互动 维诺娜&句客宝"
 
   var room_obj = data[room_sales]['all_rooms'][room_name]
@@ -348,8 +345,20 @@ var room_name
       console.log("timerAlive false, new timer!!")
       let mytimer = setTimeout(() => {
         //msg.say('超过'+ (tolerate_time/1000).toString()+'秒没回');  
-        var s = "【" + msg.from().name() + "】的消息在【"+room_sales + "】负责的【" + room_name + "】已超过【" + ((tolerate_time / 1000 / 60).toFixed(2).toString()) + "】分钟没被回复";
-        puppet.messageSendText(alert_group, s);
+        var s = "【" + msg.from().name() + "】的消息在【"+room_sales + "】负责的【" + room_name + "】快超过" + ((tolerate_time / 1000 / 60).toFixed(2).toString()) + "分钟没被回复了！[Thinking]";
+        mycard.elements[0]["content"] = `**${msg.from().name()}** 的消息在 **${room_sales}** 负责的 **${room_name}** 就快超过 **${((tolerate_time / 1000 / 60).toFixed(2).toString()) }** 分钟没被回复啦! 加油加油​${"⛽️"}`;
+        lark.message.send({
+          chat_id: alert_group ,
+          msg_type: 'interactive',
+          card:mycard,
+        });
+        lark.message.send({
+          chat_id: sales2chat[room_sales] ,
+          msg_type: 'interactive',
+          card:mycard,
+        });
+        // puppet.messageSendText(alert_group, s);
+        // puppet.messageSendText(sales2chat[room_sales], s);
         timeout_count += 1;
       }, tolerate_time);
 
@@ -419,4 +428,24 @@ bot.start()
     log.info('StarterBot', 'Starter Bot Started.')
     // await bot.logout()
   })
-  .catch(e => log.error('StarterBot', e))
+  .catch(e => {
+    log.error('StarterBot', e)
+    process.exit(55)
+  })
+
+
+process.on('uncaughtException', err => {
+  console.error(err && err.stack)
+  mycard.elements[0]["content"] = `系統要掛掉了QQ`;
+  lark.message.send({
+    chat_id:  target_roomid,
+    msg_type: 'interactive',
+    card:mycard,
+  });
+  lark.message.send({
+    chat_id:  target_roomid,
+    msg_type: 'text',
+    content: {text:err && err.stack},
+  });
+  process.exit(55)
+});

@@ -53,29 +53,52 @@ var file_body = {
 const BBIWY_group_id = "oc_a1f098656192c592e21aae7175219d46"
 const bot_test_group_id = "oc_f8bf4c888c663a7f3aac4ff3452bc3d4"
 
+
+var mycard =  {
+  "config": {
+    "wide_screen_mode": true
+  },
+  "elements": [
+    {
+      "tag": "markdown",
+      "content": ""
+    }
+  ],
+  "header": {
+    "template": "red",
+    "title": {
+      "content": "超时警报",
+      "tag": "plain_text"
+    }
+  }
+}
 async function sendMessage() {
   let lark = new Feishu('cli_a11cb78f1a78900b', 'v8EDxzVdkIipoEaIVtrqfgUoCWsrB1vB');
 
     let {groups} = await lark.bot.group.getList();
-   console.log(groups)
+  // console.log(groups)
   let chatIds = groups.map(group => group.chat_id);
   
   // for(var i in sales2chat){
+    // let {message_id} = await lark.message.send({
+    //     chat_id: alert_group ,
+    //     msg_type: 'text',
+    //     content: {text: '现在我改成10分钟提醒一次噢～'},
+    //   });
+    // console.log(`Message (${message_id}) sent!`);
+
+    mycard.elements[0]["content"] = `**${"Mr.wang"}** 的消息在 **${"董森"}** 负责的 **${"句子互动服务群-魔力猫盒"}** 超过 **${10.00}** 分钟没被回复了! ​${"🧐"}`;
     let {message_id} = await lark.message.send({
-        chat_id: alert_group ,
-        msg_type: 'text',
-        content: {text: 'hi~ 我是sales-assistant, 以后会负责辅助各位的销售，请多多指教~'},
-      });
-    console.log(`Message (${message_id}) sent!`);
+      chat_id: bot_test_group_id ,
+      msg_type: 'interactive',
+      card:mycard,
+    });
+  console.log(`Message (${message_id}) sent!`);
   // }
-  // let {message_id} = await lark.message.send({
-  //         chat_id: "oc_7ff99d4403ba04a6129dfb737e24739f",
-  //         msg_type: 'text',
-  //         content: {text: '是的～'},
-  //       });
-  //     console.log(`Message (${message_id}) sent!`);
+
+
   for (let chatId of chatIds) {
-     console.log(chatId)
+    // console.log(chatId)
     // let {message_id} = await lark.message.send({
     //   chat_id: chatId,
     //   msg_type: 'text',

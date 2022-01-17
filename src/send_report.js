@@ -55,9 +55,9 @@ async function puppet_start(){
      //   puppet.messageSendText(target_roomid, '超过'+ (tolerate_time/1000).toString()+'秒没回')  
      // }, tolerate_time);
      // }
-    //  let timerID = setTimeout(() => {  
-    //   myfunc()
-    //  }, tolerate_time);
+     let timerID = setTimeout(() => {  
+      myfunc()
+     }, tolerate_time);
      
      //timer2 = JSON.parse(JSON.stringify(timer))
      // clearTimeout(timerID[Symbol.toPrimitive]())
@@ -66,13 +66,13 @@ async function puppet_start(){
 
 }
 puppet_start()
-var vv = await puppet.roomList()
-for(var i in vv){
-  console.log(vv[i]["chat_id"])
-  var tt = await puppet.roomMemberList(vv[i]["chat_id"])
-  console.log(tt)
-}
-console.log(vv)
+// var vv = await puppet.roomList()
+// for(var i in vv){
+//   console.log(vv[i]["chat_id"])
+//   var tt = await puppet.roomMemberList(vv[i]["chat_id"])
+//   console.log(tt)
+// }
+// console.log(vv)
 
 
 

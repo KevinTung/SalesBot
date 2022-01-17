@@ -39,6 +39,7 @@
     "dotenv": "^10.0.0",
     "export-to-csv": "^0.2.1",
     "file-saver": "^2.0.5",
+    "forever": "^4.0.2",
     "json2csv": "^5.0.6",
     "lark-js-sdk": "^0.1.2",
     "moment": "^2.29.1",
