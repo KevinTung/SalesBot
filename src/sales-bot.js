@@ -426,7 +426,6 @@ bot.on('message', onMessage)
 bot.start()
   .then(async () => {
     log.info('StarterBot', 'Starter Bot Started.')
-    // await bot.logout()
   })
   .catch(e => {
     log.error('StarterBot', e)

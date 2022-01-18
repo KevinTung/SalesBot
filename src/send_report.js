@@ -55,9 +55,9 @@ async function puppet_start(){
      //   puppet.messageSendText(target_roomid, '超过'+ (tolerate_time/1000).toString()+'秒没回')  
      // }, tolerate_time);
      // }
-     let timerID = setTimeout(() => {  
-      myfunc()
-     }, tolerate_time);
+    //  let timerID = setTimeout(() => {  
+    //   myfunc()
+    //  }, tolerate_time);
      
      //timer2 = JSON.parse(JSON.stringify(timer))
      // clearTimeout(timerID[Symbol.toPrimitive]())
@@ -126,15 +126,16 @@ async function query_document(index_name,query){
 
 var all_sales = [
   // ,'曾璐','陈子曦','董森','冯伦','韩祥宇','宋宗强','王建超'
-  '童子铨', '董森', '宋宗强', '陈子曦', '冯伦', '李传君', '吴强强'
+  '童子铨', '董森', '宋宗强', '陈子曦', '冯伦', '李传君', '吴强强','undefined'
 ]
 var doc_metric_id = 4;
 var juzi_corp_name = "北京句子互动科技有限公司"
 
 
-async function myfunc(){
+async function myfunc(){ 
+  //ASSERT: if no chats, then won't output
   var value = await client.get({
-    id: 3,
+    id: doc_metric_id,
     index: index_metric
   })
   //put_document(index_metric,value.body._source,doc_metric_id);
@@ -152,10 +153,9 @@ async function myfunc(){
     //console.log(JSON.stringify(i,null,4));
     if(i==='童子铨')continue; //testing 
     if(!all_sales.includes(i))continue;
-    if(data[i]["role"]==="sales"){
+    if(true){
       for(var room in data[i]["all_rooms"]){
         console.log("\nname: "+i+" room: "+room);     
-        
         var qq = {
           sort:[
             {"payload.timestamp":{"order":"asc"}}
@@ -185,7 +185,8 @@ async function myfunc(){
         var [crit_2_min_count,avg_time,total_num,snum,emnum,cnum] = print_a_room(response);
         console.log("crit_2_min_count,avg_time,total_num:"+[crit_2_min_count,avg_time,total_num]);
         room = room.replace("句子互动服务群-",''); 
-        if(total_num!==0){
+        if(total_num!==0){ 
+        //if(true){
           total_csv_data.push({
             name: i,
             room: room,
@@ -277,13 +278,14 @@ async function print_all_rooms(){
   console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
   var data = value.body._source.data; 
   for(var i in data){
-    console.log("."+i)
+    console.log("."+i+".."+Object.keys(data[i]["all_rooms"]).length)
     for(var room in data[i]["all_rooms"]){
       console.log(".. "+room);     
     }
   }
 }
-//print_all_rooms() COMMAND
+myfunc()
+//print_all_rooms()// COMMAND
 // room_manipulation() COMMAND
 async function room_manipulation(){
   var value = await client.get({
@@ -380,15 +382,15 @@ function beautify_msg(text){
 function beautify(text){
   var a = text.split(dividers[0])
   var b = []
-  console.log(a,a.length)
+  //console.log(a,a.length)
   for(var i=0; i<a.length; i++){
-    console.log(i,a[i])
+    //console.log(i,a[i])
     var c = a[i].split(dividers[1])
-    console.log("splt:",c)
+    //console.log("splt:",c)
     b = b.concat(c)
   }
   var d = b[b.length-1].split("\n")
-  console.log(d,"returning:",d[d.length-1]) 
+ // console.log(d,"returning:",d[d.length-1]) 
   return d[d.length-1]
 }
 function output_room(response){

@@ -9,7 +9,7 @@
   },
   "scripts": {
     "lint": "eslint \"examples/*.ts\" \"tests/*.ts\"",
-    "start": "cross-env NODE_OPTIONS=\"--no-warnings --loader=ts-node/esm\" node examples/sales-bot.js",
+    "start": "cross-env NODE_OPTIONS=\"--no-warnings --loader=ts-node/esm\" node src/sales-bot.js",
     "start:js": "node examples/ding-dong-bot.js",
     "start:service": "cross-env WECHATY_LOG=verbose WECHATY_PUPPET=wechaty-puppet-service npm start",
     "start:wechat:web": "cross-env WECHATY_LOG=verbose WECHATY_PUPPET=wechaty-puppet-wechat npm start",
@@ -51,11 +51,7 @@
     "wechaty-puppet": "^0.34.1",
     "wechaty-puppet-lark": "^0.4.5",
     "wechaty-puppet-lark-2": "^0.4.7",
-    "wechaty-puppet-oicq": "^1.0.0",
-    "wechaty-puppet-service": "^0.21.1",
-    "wechaty-puppet-wechat": "^1.0.1",
-    "wechaty-puppet-wechat4u": "^1.0.1",
-    "wechaty-puppet-whatsapp": "^1.0.1"
+    "wechaty-puppet-service": "^0.21.1"
   },
   "devDependencies": {
     "@chatie/eslint-config": "^1.0.4",
