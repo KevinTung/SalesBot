@@ -120,7 +120,7 @@ var sales_supervisor = [
 ]
 var all_sales = [
   // ,'曾璐','陈子曦','董森','冯伦','韩祥宇','宋宗强','王建超'
-  '童子铨', '董森', '宋宗强', '陈子曦', '冯伦', '李传君', '吴强强'
+  '童子铨', '董森', '宋宗强', '陈子曦', '冯伦', '李传君', '吴强强','孙文博','undefined'
 ]
 var alert_group = "oc_151f493e3d8b15ded4b41520a84a2739"
 var sales2chat = {
@@ -162,10 +162,8 @@ async function onMessage(msg) {
   console.log("MSG:",msg.toString())
   msg._payload.fromInfo = rename_payload(msg.from());
 
-var room_sales
-var room_name
-
-
+  var room_sales
+  var room_name
   var value;
   console.log("MSG1")
   if (msg.room() == null) { //from individual or group? 
@@ -195,6 +193,7 @@ var room_name
       console.log("sales is ",search_sales)
       room_sales = search_sales
     }
+
 
     value = await client.get({
       id: doc_metric_id,
@@ -318,6 +317,7 @@ var room_name
   }
 
   //SECTION:TIMER
+  //new method: pull every rooms, from end, check the last customer msg, cmp time difference 
   //if msg from customers, set timer, need to reply in t seconds 
   var memcorp = await msg.from().corporation();
   //if(memcorp !== juzi_corp_name &&!all_sales.includes(msg.from().name()) ){
@@ -327,59 +327,62 @@ var room_name
 
   var room_obj = data[room_sales]['all_rooms'][room_name]
   var commands = ["cancel"]
-  if ((memcorp !== juzi_corp_name) && !commands.includes(msg._payload.text)) { //not employee, i.e. customer
-    //if timer is off, then start timer, else no actions
-    console.log("customer request!!")
-    console.log(room_obj)
+  // if ((memcorp !== juzi_corp_name) && !commands.includes(msg._payload.text)) { //not employee, i.e. customer
+  //   //if timer is off, then start timer, else no actions
+  //   console.log("customer request!!")
+  //   console.log(room_obj)
 
-    if (!Object.keys(room_obj).includes("timerID")) { //init
-      console.log("init data structure!!")
-      room_obj["timerID"] = "" //need to make sure data type is right
-      //room_obj["timerAlive"] = false;
-      room_obj["timer_timestamp"] = 0
-    }
-    var timer_timestamp = new Date(room_obj["timer_timestamp"]) //maintain the init time of last timer
-    var current_time = new Date(msg._payload.timestamp)
-    console.log("current timer, last timer:", current_time, timer_timestamp)
-    if (current_time - timer_timestamp > tolerate_time) { //timer must be dead. can init new timer
-      console.log("timerAlive false, new timer!!")
-      let mytimer = setTimeout(() => {
-        //msg.say('超过'+ (tolerate_time/1000).toString()+'秒没回');  
-        var s = "【" + msg.from().name() + "】的消息在【"+room_sales + "】负责的【" + room_name + "】快超过" + ((tolerate_time / 1000 / 60).toFixed(2).toString()) + "分钟没被回复了！[Thinking]";
-        mycard.elements[0]["content"] = `**${msg.from().name()}** 的消息在 **${room_sales}** 负责的 **${room_name}** 就快超过 **${((tolerate_time / 1000 / 60).toFixed(2).toString()) }** 分钟没被回复啦! 加油加油​${"⛽️"}`;
-        lark.message.send({
-          chat_id: alert_group ,
-          msg_type: 'interactive',
-          card:mycard,
-        });
-        lark.message.send({
-          chat_id: sales2chat[room_sales] ,
-          msg_type: 'interactive',
-          card:mycard,
-        });
-        // puppet.messageSendText(alert_group, s);
-        // puppet.messageSendText(sales2chat[room_sales], s);
-        timeout_count += 1;
-      }, tolerate_time);
+  //   if (!Object.keys(room_obj).includes("timerID")) { //init
+  //     console.log("init data structure!!")
+  //     room_obj["timerID"] = "" //need to make sure data type is right
+  //     //room_obj["timerAlive"] = false;
+  //     room_obj["timer_timestamp"] = 0
+  //   }
+  //   var timer_timestamp = new Date(room_obj["timer_timestamp"]) //maintain the init time of last timer
+  //   var current_time = new Date(msg._payload.timestamp)
+  //   console.log("current timer, last timer:", current_time, timer_timestamp)
+  //   if (current_time - timer_timestamp > tolerate_time) { //timer must be dead. can init new timer
+  //     console.log("timerAlive false, new timer!!")
+  //     let mytimer = setTimeout(() => {
+  //       //msg.say('超过'+ (tolerate_time/1000).toString()+'秒没回');  
+  //       var s = "【" + msg.from().name() + "】的消息在【"+room_sales + "】负责的【" + room_name + "】快超过" + ((tolerate_time / 1000 / 60).toFixed(2).toString()) + "分钟没被回复了！[Thinking]";
+  //       mycard.elements[0]["content"] = `**${msg.from().name()}** 的消息在 **${room_sales}** 负责的 **${room_name}** 就快超过 **${((tolerate_time / 1000 / 60).toFixed(2).toString()) }** 分钟没被回复啦! 加油加油​${"⛽️"}`;
+  //       if(room_sales==undefined){
+  //         mycard.elements[0]["content"] += `\n**${room_name} 还没有销售，请添加一位销售`
+  //       }
+  //       lark.message.send({
+  //         chat_id: alert_group ,
+  //         msg_type: 'interactive',
+  //         card:mycard,
+  //       });
+  //       lark.message.send({
+  //         chat_id: sales2chat[room_sales] ,
+  //         msg_type: 'interactive',
+  //         card:mycard,
+  //       });
+  //       // puppet.messageSendText(alert_group, s);
+  //       // puppet.messageSendText(sales2chat[room_sales], s);
+  //       timeout_count += 1;
+  //     }, tolerate_time);
 
-      room_obj["timerID"] = mytimer[Symbol.toPrimitive]()
-      room_obj["timer_timestamp"] = msg._payload.timestamp
-      timer_set_count += 1;
-    }
-    console.log("AFTER:", room_obj)
+  //     room_obj["timerID"] = mytimer[Symbol.toPrimitive]()
+  //     room_obj["timer_timestamp"] = msg._payload.timestamp
+  //     timer_set_count += 1;
+  //   }
+  //   console.log("AFTER:", room_obj)
 
-  } else { //employee
-    console.log("employee reply!")
-    console.log("BEFORE:", room_obj)
-    var timer_timestamp = new Date(room_obj["timer_timestamp"]) //maintain the init time of last timer
-    var current_time = new Date(msg._payload.timestamp)
-    console.log("current timer, last timer:", current_time, timer_timestamp)
-    if (current_time - timer_timestamp < tolerate_time) { //if timer is on, then turn off timer
-      clearTimeout(room_obj["timerID"])
-      timer_cancel_count += 1
-    }
-    console.log("AFTER:", room_obj)
-  }
+  // } else { //employee
+  //   console.log("employee reply!")
+  //   console.log("BEFORE:", room_obj)
+  //   var timer_timestamp = new Date(room_obj["timer_timestamp"]) //maintain the init time of last timer
+  //   var current_time = new Date(msg._payload.timestamp)
+  //   console.log("current timer, last timer:", current_time, timer_timestamp)
+  //   if (current_time - timer_timestamp < tolerate_time) { //if timer is on, then turn off timer
+  //     clearTimeout(room_obj["timerID"])
+  //     timer_cancel_count += 1
+  //   }
+  //   console.log("AFTER:", room_obj)
+  // }
   //console.log("CHECK_AFTER",data[room_sales]['all_rooms'])
 
   console.log("timer set, cancel, timeout count:", timer_set_count, " ", timer_cancel_count, " ", timeout_count)

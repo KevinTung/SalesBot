@@ -11,5 +11,3 @@ clear='\033[0m'
 
 echo -e "${blue}Stopping Salesbot Container..${clear}"
 docker stop salesbot
-echo -e "${red}Removing Salesbot Container..${clear}"
-docker rm salesbot

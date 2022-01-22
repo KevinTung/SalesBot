@@ -11,12 +11,6 @@ var auth = "admin:admin"; // For testing only. Don't store credentials in code.
 
 // Create a client with SSL/TLS enabled.
 var { Client } = require("@opensearch-project/opensearch");
-const { POINT_CONVERSION_HYBRID } = require("constants");
-var fs = require("fs");
-const { get } = require("http");
-const { payload } = require("wechaty-puppet");
-
-
 var client = new Client({
   node: protocol + "://" + auth + "@" + host + ":" + port,
   ssl: {
@@ -316,29 +310,18 @@ async function query_document(index_name,query){
 var index_metric = "juzibot-sales-metric";
 var response_time = 60*1000
 //var all_sales = ['童子铨','曾璐','陈子曦','董森','冯伦','韩祥宇','宋宗强','王建超','曹啸']
+// var all_sales = [
+//   // '童子铨','曾璐','陈子曦','董森','冯伦','韩祥宇','宋宗强','王建超'
+//   '曾璐','董森','宋宗强','陈子曦','冯伦','尹伯昊','李传君','李添','刘珉','孙文博','齐全喜'
+//   ,'陶好','田野','吴强强','王生良'
+// ]
 var all_sales = [
-  // '童子铨','曾璐','陈子曦','董森','冯伦','韩祥宇','宋宗强','王建超'
-  '曾璐','董森','宋宗强','陈子曦','冯伦','尹伯昊','李传君','李添','刘珉','孙文博','齐全喜'
-  ,'陶好','田野','吴强强','王生良'
+  // ,'曾璐','陈子曦','董森','冯伦','韩祥宇','宋宗强','王建超'
+  '童子铨', '董森', '宋宗强', '陈子曦', '冯伦', '李传君', '吴强强','undefined'
 ]
 var doc_metric_id = 4;
 
-//print_all_rooms()
 
-async function print_all_rooms(){
-  var value = await client.get({
-    id: doc_metric_id,
-    index: index_metric
-  })
-  console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
-  var data = value.body._source.data; 
-  for(var i in data){
-    console.log("."+i)
-    for(var room in data[i]["all_rooms"]){
-      console.log(".. "+room);     
-    }
-  }
-}
 //delete_document(index_metric,3);
 //myfunc()
 
@@ -587,19 +570,19 @@ async function retrieve_room_from_name(room){
 //   console.log(b,b.length)
 //   return b[-1]
 // }
-//print_metric()
-async function print_metric(){
-  var value = await client.get({
-    id: 3,
-    index: index_metric
-  })
-  var source = value.body._source; 
-  var data = value.body._source.data; 
-  console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
-  for(var i in data){
-    print(i)
-  }
-}
+// print_metric()
+// async function print_metric(){
+//   var value = await client.get({
+//     id: doc_metric_id,
+//     index: index_metric
+//   })
+//   var source = value.body._source; 
+//   var data = value.body._source.data; 
+//   console.log("first retrieve metric\n"+JSON.stringify(value.body._source,null,4));
+//   for(var i in data){
+//     console.log(data[i])
+//   }
+// }
 
 async function retrieve_id_from_channel(id){ //retrieve channel from id 
 

@@ -9,7 +9,7 @@ import {
 }                           from 'wechaty-puppet'
 const puppet = new PuppetLark({
   larkServer: {
-    port: 1235,
+    port: 1236,
   },
 })
 
@@ -76,7 +76,7 @@ async function sendMessage() {
   let lark = new Feishu('cli_a11cb78f1a78900b', 'v8EDxzVdkIipoEaIVtrqfgUoCWsrB1vB');
 
     let {groups} = await lark.bot.group.getList();
-  // console.log(groups)
+   console.log(groups)
   let chatIds = groups.map(group => group.chat_id);
   
   // for(var i in sales2chat){
@@ -87,13 +87,13 @@ async function sendMessage() {
     //   });
     // console.log(`Message (${message_id}) sent!`);
 
-    mycard.elements[0]["content"] = `**${"Mr.wang"}** 的消息在 **${"董森"}** 负责的 **${"句子互动服务群-魔力猫盒"}** 超过 **${10.00}** 分钟没被回复了! ​${"🧐"}`;
-    let {message_id} = await lark.message.send({
-      chat_id: bot_test_group_id ,
-      msg_type: 'interactive',
-      card:mycard,
-    });
-  console.log(`Message (${message_id}) sent!`);
+  //   mycard.elements[0]["content"] = `**${"Mr.wang"}** 的消息在 **${"董森"}** 负责的 **${"句子互动服务群-魔力猫盒"}** 超过 **${10.00}** 分钟没被回复了! ​${"🧐"}`;
+  //   let {message_id} = await lark.message.send({
+  //     chat_id: bot_test_group_id ,
+  //     msg_type: 'interactive',
+  //     card:mycard,
+  //   });
+  // console.log(`Message (${message_id}) sent!`);
   // }
 
 
