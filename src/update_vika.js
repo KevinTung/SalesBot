@@ -48,7 +48,18 @@ async function query_document(index_name,query){
 var sales_list = await get_all_names(2)
 var after_sales_list = await get_all_names(3)
 var all_sales = sales_list.concat(after_sales_list)
-calculate_metric()
+
+var tolerate_time = 60 * 1000
+var counter = 0
+console.log("Now Starting..")
+setInterval(() => {  
+    console.log("Now Update Vika..");
+    console.log("Counter:",counter)
+    counter+=1
+    calculate_metric()
+}, tolerate_time);
+
+
 async function calculate_metric(){ 
     //ASSERT: calculate only today's metric, so the metric only depends on room, instead of in_charge and phase
     //in_charge might be "" ?
