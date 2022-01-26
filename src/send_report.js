@@ -64,7 +64,6 @@ var host = "localhost";
 var protocol = "https";
 var port = 9200;
 var auth = "admin:admin"; // For testing only. Don't store credentials in code.
-var ca_certs_path = "./root-ca.pem";
 
 // Optional client certificates if you don't want to use HTTP basic authentication.
 // var client_cert_path = '/full/path/to/client.pem'
@@ -72,9 +71,6 @@ var ca_certs_path = "./root-ca.pem";
 
 // Create a client with SSL/TLS enabled.
 import { Client } from "@opensearch-project/opensearch";
-import { POINT_CONVERSION_HYBRID } from "constants";
-import fs from "fs";
-import { get } from "http";
 //import { payload } from "wechaty-puppet";
 
 

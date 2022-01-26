@@ -221,7 +221,7 @@ var settings = {
     },
   },
 };
-//create_index("juzibot-sales-msg-v2-3").catch(console.log);
+create_index("juzibot-tttt").catch(console.log);
 //put_document(index_name,doc2,id).catch(console.log);
 //query_document(index_name,query).catch(console.log);
 //delete_document(index_name,id).catch(console.log);
