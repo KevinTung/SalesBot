@@ -52,6 +52,7 @@ var all_sales = sales_list.concat(after_sales_list)
 var tolerate_time = 60 * 1000
 var counter = 0
 console.log("Now Starting..")
+calculate_metric()
 setInterval(() => {  
     console.log("Now Update Vika..");
     console.log("Counter:",counter)
@@ -84,6 +85,7 @@ async function calculate_metric(){
         vika_total_csv_data.push(metric_obj)
        }
     }
+    console.log(vika_total_csv_data)
     if(vika_total_csv_data.length > 0){ //must 
         await vika_export_customer_record(vika_total_csv_data)
         //vika_total_csv_data = []
@@ -95,7 +97,7 @@ async function calculate_metric(){
 //VIKA MODULE 
 var vika_datasheet_id = "dstedTCmf1RnY3b6gc"
 var vika_headermap =  [
-  {id: 'name', title: '负责人'},
+  {id: 'name', title: '负责人'}, 
   {id: 'room', title: '群聊名'},
   {id: 'over2mins', title: '回复超过2分钟次数'},
   {id: 'avg', title: '平均回复时间（分钟）'},

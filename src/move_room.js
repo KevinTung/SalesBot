@@ -105,7 +105,7 @@ async function update_names(){ //no postsales yet , just init
 // var t = await get_all_rooms(room_index)
 // console.log(t)
 
-get_a_room(room_index,"一号互联-句子技术支持内部群")
+get_a_room(room_index,"句子互动服务群-小壳")
 async function get_a_room(room_index,room_name){
     var qq = {
         size:1000,
@@ -153,6 +153,7 @@ async function delete_index(index_name){
     console.log("Deleting index:");
     console.log(response.body);
   }
+
 async function print_all_rooms(){
   var value = await client.get({
     id: doc_metric_id,

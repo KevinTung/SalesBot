@@ -43,6 +43,8 @@ var after_sales_list = await get_all_names(3)
 var tolerate_time = 60 * 1000
 var counter = 0
 console.log("Now Starting..")
+vika_update_roomdb()
+
 setInterval(() => {  
     console.log("Now Pulling Vika Data and update roomdb..");
     console.log("Counter:",counter)
@@ -105,12 +107,12 @@ async function vika_update_roomdb() {
     await vika_update(update_entries)
     await db_room_update(vika_update_rooms, db_room_dict)
 }
-async function db_room_update(rooms, db_room_dict) {
+async function db_room_update(rooms, db_room_dict) { //DANGEROUS!
     for (var room of rooms) {
         var room_name = room.fields['群聊名']
         var source = db_room_dict[room_name]._source
-        source["phase"] = room.fields['负责人']
-        source["in_charge"] = room.fields['群聊阶段']
+        source["phase"] = room.fields['群聊阶段']
+        source["in_charge"] = room.fields['负责人']
         var id = db_room_dict[room_name]._id
         put_document(room_index, source, id)
     }
