@@ -11,11 +11,11 @@ var client = new Client({
     rejectUnauthorized: false//) if you're using self-signed certificates with a hostname mismatch.
   },
 });
-var index_metric = "juzibot-sales-metric";
+
 var name_index = "juzibot-sales-name";
 var name_index_doc_id = 1 
 var room_index = "juzibot-sales-room-2";
-var doc_metric_id = 4;
+
 var all_sales = [
     '童子铨', '董森', '宋宗强', '陈子曦', '冯伦', '李传君', '吴强强','孙文博','undefined','test'
   ]
@@ -105,7 +105,7 @@ async function update_names(){ //no postsales yet , just init
 // var t = await get_all_rooms(room_index)
 // console.log(t)
 
-// get_a_room(room_index,"句子互动服务群-位来小猎")
+get_a_room(room_index,"一号互联-句子技术支持内部群")
 async function get_a_room(room_index,room_name){
     var qq = {
         size:1000,
