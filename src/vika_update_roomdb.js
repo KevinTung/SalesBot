@@ -17,6 +17,7 @@
 */
 
 "use strict"; //what's this?
+import * as fs from 'fs'
 var host = "localhost";
 var protocol = "https";
 var port = 9200;
@@ -32,6 +33,7 @@ import { Vika } from "@vikadata/vika";
 const vika = new Vika({ token: "uskFCOzapV3u5AcryXEpG1U", fieldKey: "name" });
 var vika_datasheet_id = "dstedTCmf1RnY3b6gc"
 const datasheet = vika.datasheet(vika_datasheet_id);
+
 
 var room_index = "juzibot-sales-room-2";
 var juzi_corp_name = "北京句子互动科技有限公司"
@@ -56,43 +58,44 @@ async function vika_update_roomdb() {
 
     sales_list = await get_all_names(2)
     after_sales_list = await get_all_names(3)
+    //retrieve db and vika rooms
     var db_rooms = await get_all_rooms(room_index) //must not duplicate
     var db_room_dict = {}
-    for (var db_room of db_rooms) db_room_dict[db_room._source["room_name"]] = db_room
-    var db_room_names = db_rooms.map((e) => { return e._source["room_name"] })
-
+    for (var db_room of db_rooms) db_room_dict[regularize_room_name(db_room._source["room_name"])] = db_room
+    var db_room_names = db_rooms.map((e) => { return regularize_room_name(e._source["room_name"]) })
+    
     var vika_rooms = await get_vika_rooms() //ASSERT a3.data.total <= 1000
     vika_rooms = vika_rooms.map((e) => { return e })
 
-    //fail: for error rooms, push a status field: "not valid room!"
+    //match vika's rooms with db's 
     var update_entries = []
     var vika_update_rooms = []
     for (var vika_room of vika_rooms) {
         var update_entry = { recordId: vika_room["recordId"], "fields": { "系统信息": [] } }
-        if (!db_room_names.includes(vika_room.fields['群聊名'])) {
+        if (!db_room_names.includes(vika_room.fields['群聊名'])) {//Check room existence
             update_entry["fields"]["系统信息"].push("房间不存在") //NEED: delete
             update_entries.push(update_entry)
         }
-        else {
+        else {//Check phase-in_charge consistency
             if (vika_room.fields['群聊阶段'] === 'pre-sales') {
                 if (sales_list.includes(vika_room.fields["负责人"])) {//valid
                     vika_update_rooms.push(vika_room)
                     update_entry["fields"]["系统信息"].push("合法")
-                    update_entries.push(update_entry) //no warning
+                    update_entries.push(update_entry) 
                 }
-                else {//invalid: update status: in_charge not in pre-sales
+                else {
                     update_entry["fields"]["系统信息"].push("负责人非售前")
                     update_entries.push(update_entry)
                 }
             }
             else if (vika_room.fields['群聊阶段'] === 'after-sales') {
-                if (after_sales_list.includes(vika_room.fields["负责人"])) {//valid,no warning
+                if (after_sales_list.includes(vika_room.fields["负责人"])) {//valid
                     vika_update_rooms.push(vika_room)
                     update_entry["fields"]["系统信息"].push("合法")
-                    update_entries.push(update_entry) //no warning
+                    update_entries.push(update_entry) 
                 }
                 else {
-                    update_entry["fields"]["系统信息"].push("负责人非售后")//fail:update status: in_charge not in after-sales
+                    update_entry["fields"]["系统信息"].push("负责人非售后")
                     update_entries.push(update_entry)
                 }
             } else {
@@ -100,14 +103,36 @@ async function vika_update_roomdb() {
                 update_entries.push(update_entry)
             }
         }
+        //Clean timeout: push a blank msg in the group
+        if(vika_room.fields['消除未回覆记录'] === true){ 
+            var mm = JSON.parse(fs.readFileSync('msgobj.json'))
+            mm.payload.fromInfo.payload.corporation = juzi_corp_name
+            mm.payload.fromInfo.payload.name = vika_room.fields["负责人"]
+            mm.payload.roomInfo.topic = vika_room.fields['完整群聊名']
+            mm.payload.timestamp = new Date()
+            mm.payload.text = 'blank bubble'
+            await put_msg(msg_index, JSON.stringify(mm)); //id in ES and in wechat is the same 
+            update_entry["fields"]["系统信息"].push("已消除延迟记录") //NEED: delete
+            update_entry["fields"]["消除未回覆记录"] = false
+            update_entries.push(update_entry)
+        }
     }
-    // console.log("VALID:",vika_update_rooms)
-    // console.log("INVALID:",update_entries.map((e)=>{return e.fields}))
-    // console.log(db_room_dict)
-    await vika_update(update_entries)
+    //make sure write_db operation is save
     await db_room_update(vika_update_rooms, db_room_dict)
+
+    //push system message
+    await vika_update(update_entries) 
+}
+function regularize_room_name(room_name){
+          var splitted_name = room_name.split('-')
+          if(splitted_name.length!==2){
+            return room_name
+          }else{
+            return splitted_name[1]
+          }
 }
 async function db_room_update(rooms, db_room_dict) { //DANGEROUS!
+    //console.log(db_room_dict)
     for (var room of rooms) {
         var room_name = room.fields['群聊名']
         var source = db_room_dict[room_name]._source
@@ -119,9 +144,18 @@ async function db_room_update(rooms, db_room_dict) { //DANGEROUS!
 }
 async function put_document(index_name, document, id) {
     // Add a document to the index.
-    console.log("Adding document1:");
+    //console.log("Adding document1:");
     var response = await client.index({
         id: id,
+        index: index_name,
+        body: document,
+        refresh: true,
+    });
+}
+async function put_msg(index_name, document) {
+    // Add a document to the index.
+    console.log("Adding msg:");
+    var response = await client.index({
         index: index_name,
         body: document,
         refresh: true,
@@ -148,19 +182,27 @@ async function vika_update(update_entries) {
                 })
                 upload_update_entries = []
             }
-            if (i % 40 == 39) {
-                sleep(1000)
+            if (i % 30 == 29) {
+                sleep(1500)
             }
         }
     }
 }
+function sleep(milliseconds) {
+    const date = Date.now();
+    let currentDate = null;
+    do {
+      currentDate = Date.now();
+    } while (currentDate - date < milliseconds);
+  }
+  
 async function get_vika_rooms() { //LIMIT: update only 1000 rooms, if a3.data.total > 1000, need to move to next page until no results
     var a3 = await datasheet.records.query({
         filterByFormula: `AND(NOT(BLANK()),IS_AFTER({上次更新时间}，TODAY()))`,
         pageSize: 1000
     })
     if (a3.success) {
-        console.log("succeeded queried", a3.data.records);
+        //console.log("succeeded queried", a3.data.records);
     } else {
         console.error(a3);
         return;
@@ -205,3 +247,6 @@ async function get_all_names(option) {
         return r
     }
 }
+process.on('uncaughtException', err => {
+    console.error(err && err.stack)
+});

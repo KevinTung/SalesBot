@@ -104,8 +104,47 @@ async function update_names(){ //no postsales yet , just init
 
 // var t = await get_all_rooms(room_index)
 // console.log(t)
-
-get_a_room(room_index,"句子互动服务群-小壳")
+var index_name = "juzibot-sales-msg-v2-4";
+get_a_room(room_index,"句子互动服务群-滔搏投资（售后）")
+//get_all_rooms(room_index)
+// var qq = {
+//   sort:[
+//     {"payload.timestamp":{"order":"asc"}}
+//   ],
+//   size:1000,
+//   query: {
+//     bool:{
+//       must:[
+//         {match: {
+//           "payload.roomInfo.topic.keyword":"句子互动服务群-郑州良达健康管理"
+//         }},
+//         {range:{
+//           "payload.timestamp": {
+//             gte: "now/d",
+//             lt: "now/s"
+//           }
+//         }}
+//       ]
+//     }
+//   }
+// }
+// var response = await query_document(index_name,qq);
+// response.forEach((e)=>{
+//   console.log(e._source.payload.roomInfo)
+// })
+// console.log(response)
+async function query_document(index_name,query){
+  // Search for the document.
+  
+  var response = await client.search({
+    index: index_name,
+    body: query,
+  });
+  console.log("Search results:");
+  console.log(response.body.hits.hits.length);
+  return response.body.hits.hits;
+}
+  
 async function get_a_room(room_index,room_name){
     var qq = {
         size:1000,
@@ -119,7 +158,7 @@ async function get_a_room(room_index,room_name){
       index: room_index,
       body: qq,
     })
-    console.log(response.body.hits.hits)
+    console.log(response.body.hits.hits[0])
     return response.body.hits.hits
 }
 
@@ -138,11 +177,12 @@ async function get_all_rooms(room_index){
         size:1000,
     });
     // console.log("Search results:");
-    //console.log(response.body.hits.hits);
+    // console.log(response.body.hits.hits);
     var r = []
     response.body.hits.hits.forEach((e)=>{
-        r.push(e._source)
+        r.push(e._source.room_name)
     });
+    console.log(r)
     return r
 }
 async function delete_index(index_name){

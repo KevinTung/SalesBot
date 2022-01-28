@@ -125,7 +125,10 @@ var sales2chat = {
   '陈子曦':"oc_e75a4dcf83bb049b2cf8b3268d097f75", 
   '冯伦':"oc_6e7e17eb110be8b22c45fa1f84a92fe1", 
   '李传君':"oc_a67d0ad8d2eee6520217ba5f5ab59879", 
-  '吴强强':"oc_94d5b1536c35c5bb0e2474d6c5a10d69"
+  '吴强强':"oc_94d5b1536c35c5bb0e2474d6c5a10d69",
+  '闫小娟': "oc_3e00b519456ce83688aa9490d98026b8",
+  '曹啸':"oc_756d240baba47a3ffea38ca2e15eb047",
+  '田荣生':"oc_4fde254e065e267b28fc5b95e728cf37",
 }
 
 var openids = ["ou_0f9275a03912ea9a1df52d9f13902ec1","ou_69332016ab8dc36da17dad017a273712"]

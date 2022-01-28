@@ -10,7 +10,6 @@ cyan='\033[0;36m'
 # Clear the color after that
 clear='\033[0m'
 
-
 echo -e "${blue}Stopping Salesbot Container..${clear}"
 docker stop salesbot
 echo -e "${red}Removing Salesbot Container..${clear}"
@@ -23,7 +22,7 @@ docker run \
     --name=salesbot \
     -e TZ=Asia/Shanghai \
     -e WECHATY_PUPPET_SERVICE_NO_TLS_INSECURE_CLIENT=true \
-    -e WECHATY_LOG=verbose \
+    -e WECHATY_LOG=error \
     -e WECHATY_PUPPET=wechaty-puppet-service \
     -e WECHATY_PUPPET_SERVICE_TOKEN=puppet_wxwork_5b06054f9a660733 \
     -e WECHATY_PUPPET_LARK_APPID=cli_a11cb78f1a78900b \

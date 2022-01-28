@@ -56,7 +56,7 @@ var auth = "admin:admin";  //For testing only. Don't store credentials in code.
 var ca_certs_path = "./root-ca.pem";
 
 // Create a client with SSL/TLS enabled.
-var fs = import("fs");
+import * as fs from 'fs'
 var client = new Client({
   node: protocol + "://" + auth + "@" + host + ":" + port,
   ssl: {
@@ -171,9 +171,15 @@ async function onMessage(msg) {
       console.log("Adding document:");
       console.log(response.body);
     }
+    msg._payload.toInfo = {};
+    var new_room = rename_payload(msg.room());
+    new_room.topic = room_name;
+    msg._payload.roomInfo = new_room;
   }
   //save msg in OpenSearch
   var new_msg = rename_payload(msg);
+  console.log("NEW:",new_msg)
+  //fs.writeFileSync('msgobj.json', JSON.stringify(new_msg));
   log.info('StarterBot', 'after\n' + JSON.stringify(new_msg));
   put_document(index_name, JSON.stringify(new_msg), new_msg.id); //id in ES and in wechat is the same 
 }
@@ -202,7 +208,7 @@ async function get_a_room(room_index, room_name) {
     index: room_index,
     body: qq,
   })
-  console.log(response.body.hits.hits)
+  response.body.hits.hits.forEach((e)=>{console.log(e._source)})
   return response.body.hits.hits
 }
 

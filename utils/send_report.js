@@ -11,7 +11,7 @@ import {
 }                           from 'wechaty-puppet'
 const puppet = new PuppetLark({
   larkServer: {
-    port: 1235,
+    port: 1231,
   },
 })
 
@@ -316,7 +316,7 @@ async function myfunc(){
     }
   }
   if(vika_total_csv_data.length > 0){ //must 
-    await vika_export_customer_record(vika_total_csv_data)
+   // await vika_export_customer_record(vika_total_csv_data)
     vika_total_csv_data = []
   }else{
     console.error("NO RECORDS YET!")

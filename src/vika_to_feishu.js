@@ -29,7 +29,10 @@ var sales2chat = {
     '李传君': "oc_a67d0ad8d2eee6520217ba5f5ab59879",
     '吴强强': "oc_94d5b1536c35c5bb0e2474d6c5a10d69",
     '孙文博': "oc_81d4b76dae3a7bcfece6f9b45bce9a4e",
-    'undefined': "oc_e297d4bc1d7e1747c995c7822e79a31f"
+    'undefined': "oc_e297d4bc1d7e1747c995c7822e79a31f",
+    '闫小娟': "oc_3e00b519456ce83688aa9490d98026b8",
+    '曹啸':"oc_756d240baba47a3ffea38ca2e15eb047",
+    '田荣生':"oc_4fde254e065e267b28fc5b95e728cf37",
 }
 const puppet = new PuppetLark({
     larkServer: {
@@ -75,7 +78,7 @@ async function vika_to_feishu() {
         var last_replier = vika_room['最后说话者']
         var person_in_charge = vika_room['负责人']
         var room_name = vika_room['群聊名']
-        var not_replied_time = vika_room['销售未回覆时间']
+        var not_replied_time = vika_room['负责人未回覆时间']
         var last_replier = vika_room['最后说话者']
         console.log(last_replier, person_in_charge, room_name, not_replied_time)
         //NOT REPLY Level ; how to make sure that each level is alerted only once? 
@@ -107,13 +110,13 @@ async function vika_to_feishu() {
             mycard.header.template = card_color
             if (not_replied_time > 20) {
                 await lark.message.send({
-                    chat_id: Bot_test_group_id,//alert_group,
+                    chat_id: alert_group,
                     msg_type: 'interactive',
                     card: mycard,
                 });
             }
             await lark.message.send({
-                chat_id: Bot_test_group_id,//sales2chat[person_in_charge] ,
+                chat_id: sales2chat[person_in_charge] ,
                 msg_type: 'interactive',
                 card: mycard,
             });
@@ -143,3 +146,6 @@ var mycard = {
 }
 
 puppet_start()
+process.on('uncaughtException', err => {
+    console.error(err && err.stack)
+});
