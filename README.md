@@ -9,15 +9,13 @@ For a toB company to sale its enterprise service, the sales need to communicate 
 ## Getting Started 
 
 ### Prerequisites
-
+- docker 
+- npm
 
 ### Installation
 
-- npm 
-
 
 ## Usage 
-
 - git clone 
 - npm install 
 
