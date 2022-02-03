@@ -81,13 +81,10 @@ npm install
 ## Usage 
 
 - Edit the `config/default.json` file
-- Use [tmux](https://tmuxcheatsheet.com/) to run multiple processes in a single terminal
+- Run the dockerized `salesbot` service
 
-```
-tmux a   #to open a new window
-Ctrl+B D #detach from tmux window
-Ctrl+B W #switch between windows
-Ctrl+D   #close a window
+```shell
+./scripts/modify_code_and_run.sh
 ```
 
 - Run the 3 undockerized programs in separate tmux terminals: 
@@ -98,19 +95,21 @@ NODE_CONFIG_DIR=./config node src/vika-update-roomdb.js
 NODE_CONFIG_DIR=./config node update-vika.js
 ```
 
-- Run the dockerized salesbot service
-
-```shell
-./scripts/modify_code_and_run.sh
-```
-
-- to update sales list, modify `config.All.names` and run
+- To update sales list, modify `config.All.names` and run
 
 ```
 NODE_CONFIG_DIR=./config node src/update-name.js 
 ```
 
+## Appendix
+- Use [tmux](https://tmuxcheatsheet.com/) to run multiple processes in a single terminal
 
+```
+tmux a   #to open a new window
+Ctrl+B D #detach from tmux window
+Ctrl+B W #switch between windows
+Ctrl+D   #close a window
+```
 
 
 ## Contact 
