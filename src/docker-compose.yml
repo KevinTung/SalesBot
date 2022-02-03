@@ -1,0 +1,11 @@
+version: "3.0"
+services:
+  salesbot-temp:
+    build: ./docker/sales-bot
+    env_file: ./config/.env
+  # update-vika:
+  #   build: ./docker/update-vika
+  # vika-update-room-db:
+  #   build: ./docker/vika-update-room-db
+  # vika-to-feishu:
+    # build: ./docker/vika-to-feishu

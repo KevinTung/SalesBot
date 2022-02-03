@@ -9,54 +9,26 @@ import {
   log,
 } from 'wechaty'
 import { Feishu } from 'lark-js-sdk';
-let lark = new Feishu('cli_a11cb78f1a78900b', 'v8EDxzVdkIipoEaIVtrqfgUoCWsrB1vB');
+import config from 'config';
+const config_all = config.get('All');
+let lark = new Feishu(config_all.lark.appId, config_all.lark.appKey);
 import qrcodeTerminal from 'qrcode-terminal'
 import { Client } from "@opensearch-project/opensearch"
 import { join } from 'path';
 
-import { PuppetLark } from 'wechaty-puppet-lark-2'
-
-import {
-  //EventMessagePayload,
-  MessageType,
-  FileBox,
-} from 'wechaty-puppet'
-const puppet = new PuppetLark({
-  larkServer: {
-    port: 1237,
-  },
-})
-
-const target_roomid = "oc_f8bf4c888c663a7f3aac4ff3452bc3d4"
-const BBIWY_group_id = "oc_a1f098656192c592e21aae7175219d46"
-
-puppet.start().catch(async e => {
-  console.error('Bot start() fail:', e)
-  // await puppet.stop()
-  process.exit(-1)
-})
-
-async function puppet_start() {
-  //const myfile = FileBox.fromFile('assets/sales_picture.png')
-  const target_roomid = "oc_f8bf4c888c663a7f3aac4ff3452bc3d4"
-  const myfile = FileBox.fromFile('assets/total_12212021.xls')
-  //await puppet.messageSendXLSFile(target_roomid, myfile,'total_12212021.xls').catch(console.error)
-  // await puppet.messageSendText(target_roomid, 'dong')
-}
-puppet_start()
-
+const target_roomid = config_all.lark.channels.target_roomid
+const BBIWY_group_id = config_all.lark.channels.BBIWY_group_id
 
 //Create OpenSearch Javascript Client (borrowed from Official code) 
-
 "use strict"; //not sure
-var host = "localhost";
-var protocol = "https";
-var port = 9200;
-var auth = "admin:admin";  //For testing only. Don't store credentials in code.
-var ca_certs_path = "./root-ca.pem";
+var host = config_all.dbConfig.host;
+var protocol = config_all.dbConfig.protocol;
+var port = config_all.dbConfig.port;
+var auth = config_all.dbConfig.auth; 
+
 
 // Create a client with SSL/TLS enabled.
-import * as fs from 'fs'
+
 var client = new Client({
   node: protocol + "://" + auth + "@" + host + ":" + port,
   ssl: {
@@ -64,13 +36,14 @@ var client = new Client({
   },
 });
 
-//put document into opensearch 
-var index_name = "juzibot-sales-msg-v2-4";
-var juzi_corp_name = "北京句子互动科技有限公司"
-var name_index = "juzibot-sales-name";
-var name_index_doc_id = 1
-var room_index = "juzibot-sales-room-2";
-var juzi_corp_name = "北京句子互动科技有限公司"
+var index_name = config_all.index.msg;
+var juzi_corp_name = config_all.corp.name
+var name_index = config_all.index.name.index
+var name_index_doc_id = config_all.index.name.docId
+var room_index = config_all.index.room
+
+
+
 async function put_document(index_name, document, id) {
   // Add a document to the index.
   var response = await client.index({
@@ -271,16 +244,5 @@ var mycard =  {
 
 process.on('uncaughtException', err => {
   console.error(err && err.stack)
-  mycard.elements[0]["content"] = `系統要掛掉了QQ`;
-  lark.message.send({
-    chat_id: target_roomid,
-    msg_type: 'interactive',
-    card: mycard,
-  });
-  lark.message.send({
-    chat_id: target_roomid,
-    msg_type: 'text',
-    content: { text: err && err.stack },
-  });
   process.exit(55)
 });

@@ -14,11 +14,14 @@
     upload 
 */
 
-"use strict"; //what's this?
-var host = "localhost";
-var protocol = "https";
-var port = 9200;
-var auth = "admin:admin";
+//Create OpenSearch Javascript Client (borrowed from Official code) 
+import config from 'config';
+const config_all = config.get('All');
+"use strict"; //not sure
+var host = config_all.dbConfig.host;
+var protocol = config_all.dbConfig.protocol;
+var port = config_all.dbConfig.port;
+var auth = config_all.dbConfig.auth; 
 import { Client } from "@opensearch-project/opensearch";
 var client = new Client({
   node: protocol + "://" + auth + "@" + host + ":" + port,
@@ -26,20 +29,28 @@ var client = new Client({
     rejectUnauthorized: false//) if you're using self-signed certificates with a hostname mismatch.
   },
 });
+
 import { Vika } from "@vikadata/vika";
-const vika = new Vika({ token: "uskFCOzapV3u5AcryXEpG1U", fieldKey: "name" });
-var room_index = "juzibot-sales-room-2";
-var juzi_corp_name = "北京句子互动科技有限公司"
-var msg_index = "juzibot-sales-msg-v2-4";
-var name_index = "juzibot-sales-name";
-var name_index_doc_id = 1
+const vika = new Vika({ token: config_all.vika.token, fieldKey: "name" });
+var vika_datasheet_id = config_all.vika.datasheetId
+const datasheet = vika.datasheet(vika_datasheet_id);
+var msg_index = config_all.index.msg;
+var juzi_corp_name = config_all.corp.name
+var name_index = config_all.index.name.index
+var name_index_doc_id = config_all.index.name.docId
+var room_index = config_all.index.room
+var tolerate_time = config_all.vika.updateTime
+
+
+
+
 
 //VIKA Interaction: check the phase and check sales, post sales to be consistant 
 var sales_list = await get_all_names(2)
 var after_sales_list = await get_all_names(3)
 var all_sales = sales_list.concat(after_sales_list)
 
-var tolerate_time = 60 * 1000
+
 var counter = 0
 console.log("Now Starting..")
 calculate_metric()
@@ -94,7 +105,7 @@ function regularize_room_name(room_name) {
 }
 //VIKA MODULE 
 //DEV: if the entries are modified, then need to modify vika_headermap
-var vika_datasheet_id = "dstedTCmf1RnY3b6gc"
+
 var vika_headermap = [
   { id: 'name', title: '负责人' },
   { id: 'room', title: '群聊名' },
@@ -112,7 +123,7 @@ var vika_headermap = [
   { id: 'not_replied_time', title: '负责人未回覆时间' },
   { id: 'phase', title: '群聊阶段' },
 ]
-const datasheet = vika.datasheet(vika_datasheet_id);
+
 async function vika_export_customer_record(datas) {
   //DEPENDS ON: room_db, name_db
   //ASSERT: No Duplicated rooms. Otherwise duplicated rooms will be re-created

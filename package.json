@@ -36,6 +36,7 @@
     "@vikadata/vika": "^1.0.5",
     "@yaireo/relative-time": "^1.0.1",
     "blob": "^0.1.0",
+    "config": "^3.3.7",
     "csv-writer": "^1.6.0",
     "dotenv": "^10.0.0",
     "export-to-csv": "^0.2.1",

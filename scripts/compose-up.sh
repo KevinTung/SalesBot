@@ -1,5 +1,3 @@
-
-
 # Color variables
 red='\033[0;31m'
 green='\033[0;32m'
@@ -34,4 +32,3 @@ echo -e "${red}Removing Salesbot Container..${clear}"
 docker rm salesbot
 echo -e "${magenta}Renaming Salesbot Container..${clear}"
 docker rename salesbot-temp salesbot
-

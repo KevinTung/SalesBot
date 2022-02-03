@@ -15,13 +15,14 @@
         check validity: incharge-phase consistency && incharge-sales consistency 
     4. update_room (room,phase,incharge)
 */
-
+import config from 'config';
+const config_all = config.get('All');
 "use strict"; //what's this?
 import * as fs from 'fs'
-var host = "localhost";
-var protocol = "https";
-var port = 9200;
-var auth = "admin:admin";
+var host = config_all.dbConfig.host;
+var protocol = config_all.dbConfig.protocol;
+var port = config_all.dbConfig.port;
+var auth = config_all.dbConfig.auth; 
 import { Client } from "@opensearch-project/opensearch";
 var client = new Client({
     node: protocol + "://" + auth + "@" + host + ":" + port,
@@ -30,19 +31,21 @@ var client = new Client({
     },
 });
 import { Vika } from "@vikadata/vika";
-const vika = new Vika({ token: "uskFCOzapV3u5AcryXEpG1U", fieldKey: "name" });
-var vika_datasheet_id = "dstedTCmf1RnY3b6gc"
+const vika = new Vika({ token: config_all.vika.token, fieldKey: "name" });
+var vika_datasheet_id = config_all.vika.datasheetId
 const datasheet = vika.datasheet(vika_datasheet_id);
 
+var msg_index = config_all.index.msg;
+var juzi_corp_name = config_all.corp.name
+var name_index = config_all.index.name.index
+var name_index_doc_id = config_all.index.name.docId
+var room_index = config_all.index.room
+var tolerate_time = config_all.vika.updateTime
 
-var room_index = "juzibot-sales-room-2";
-var juzi_corp_name = "北京句子互动科技有限公司"
-var msg_index = "juzibot-sales-msg-v2-4";
-var name_index = "juzibot-sales-name";
-var name_index_doc_id = 1
+
 var sales_list = await get_all_names(2)
 var after_sales_list = await get_all_names(3)
-var tolerate_time = 60 * 1000
+
 var counter = 0
 console.log("Now Starting..")
 vika_update_roomdb()
@@ -65,6 +68,10 @@ async function vika_update_roomdb() {
     var db_room_names = db_rooms.map((e) => { return regularize_room_name(e._source["room_name"]) })
     
     var vika_rooms = await get_vika_rooms() //ASSERT a3.data.total <= 1000
+    if(vika_rooms==undefined){
+        console.log("get_vika_rooms FAILED")
+        return
+    }
     vika_rooms = vika_rooms.map((e) => { return e })
 
     //match vika's rooms with db's 
@@ -105,7 +112,7 @@ async function vika_update_roomdb() {
         }
         //Clean timeout: push a blank msg in the group
         if(vika_room.fields['消除未回覆记录'] === true){ 
-            var mm = JSON.parse(fs.readFileSync('msgobj.json'))
+            var mm = JSON.parse(fs.readFileSync('utils/msgobj.json'))
             mm.payload.fromInfo.payload.corporation = juzi_corp_name
             mm.payload.fromInfo.payload.name = vika_room.fields["负责人"]
             mm.payload.roomInfo.topic = vika_room.fields['完整群聊名']
