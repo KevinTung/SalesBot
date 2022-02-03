@@ -41,7 +41,7 @@ var juzi_corp_name = config_all.corp.name
 var name_index = config_all.index.name.index
 var name_index_doc_id = config_all.index.name.docId
 var room_index = config_all.index.room
-
+var backup_id = config_all.index.name.backup
 
 
 async function put_document(index_name, document, id) {
@@ -132,8 +132,10 @@ async function onMessage(msg) {
       room_obj["phase"] = "pre-sales"
       if (searched_sales.length > 0) {
         room_obj["in_charge"] = searched_sales[0]
+        add_room(searched_sales[0],room_name)
       }else{
         room_obj["in_charge"] = ""
+        add_room("undefined",room_name)
       }
       console.log("New Room:", room_obj)
       var response = await client.index({
@@ -142,6 +144,7 @@ async function onMessage(msg) {
         refresh: true,
       });
       console.log("Adding document:");
+      
       console.log(response.body);
     }
     msg._payload.toInfo = {};
@@ -167,7 +170,32 @@ function rename_payload(obj) {
 const bot = WechatyBuilder.build({
   name: 'ding-dong-bot',
 })
-// get_a_room(room_index,"句子互动服务群-位来小猎")
+
+
+async function add_room(name,room){
+  var value = await client.get({
+      id: name_index_doc_id,
+      index: name_index
+    })
+    value = value.body._source
+  await put_document(name_index,JSON.stringify(value),backup_id)
+
+  var names = Object.keys(value)
+  if(!names.includes(name)){
+    console.log("add_room error: no name!")
+    return 
+  } 
+
+  var rooms = value[name]['all_rooms']
+  if(rooms.includes(room)){
+    console.log("add_room error: already has room!")
+    return 
+  }
+
+  value[name]['all_rooms'].push(room)
+  //console.log('after',JSON.stringify(value,null,4))
+  await put_document(name_index,JSON.stringify(value),name_index_doc_id)
+}
 async function get_a_room(room_index, room_name) {
   var qq = {
     size: 1000,

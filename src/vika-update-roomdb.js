@@ -73,11 +73,13 @@ async function vika_update_roomdb() {
         return
     }
     vika_rooms = vika_rooms.map((e) => { return e })
-
+    //console.log(db_room_dict)
     //match vika's rooms with db's 
     var update_entries = []
     var vika_update_rooms = []
+   
     for (var vika_room of vika_rooms) {
+        var valid = false
         var update_entry = { recordId: vika_room["recordId"], "fields": { "系统信息": [] } }
         if (!db_room_names.includes(vika_room.fields['群聊名'])) {//Check room existence
             update_entry["fields"]["系统信息"].push("房间不存在") //NEED: delete
@@ -87,6 +89,7 @@ async function vika_update_roomdb() {
             if (vika_room.fields['群聊阶段'] === 'pre-sales') {
                 if (sales_list.includes(vika_room.fields["负责人"])) {//valid
                     vika_update_rooms.push(vika_room)
+                    valid = true 
                     update_entry["fields"]["系统信息"].push("合法")
                     update_entries.push(update_entry) 
                 }
@@ -98,6 +101,7 @@ async function vika_update_roomdb() {
             else if (vika_room.fields['群聊阶段'] === 'after-sales') {
                 if (after_sales_list.includes(vika_room.fields["负责人"])) {//valid
                     vika_update_rooms.push(vika_room)
+                    valid = true 
                     update_entry["fields"]["系统信息"].push("合法")
                     update_entries.push(update_entry) 
                 }
@@ -108,6 +112,15 @@ async function vika_update_roomdb() {
             } else {
                 update_entry["fields"]["系统信息"].push("群聊阶段不存在") //NEED: delete
                 update_entries.push(update_entry)
+            }
+        }
+        if(valid == true){
+            var room = vika_room.fields['群聊名']
+            var old_name = db_room_dict[room]
+            var new_name = vika_room.fields["负责人"]
+            
+            if(old_name!==new_name){
+                await change_room(old_name,new_name,room)
             }
         }
         //Clean timeout: push a blank msg in the group
@@ -129,6 +142,42 @@ async function vika_update_roomdb() {
 
     //push system message
     await vika_update(update_entries) 
+}
+
+
+async function change_room(old_name,new_name,room){
+  var value = await client.get({
+    id: name_index_doc_id,
+    index: name_index
+  })
+  value = value.body._source
+  await put_document(name_index,JSON.stringify(value),backup_id)
+
+  var names = Object.keys(value)
+  if(!names.includes(old_name)){
+    console.log("change_name error: no old name!")
+    return 
+  }  
+  if(!names.includes(old_name)){
+    console.log("change_name error: no new name!")
+    return 
+  }  
+
+  var old_index =value[old_name]['all_rooms'].indexOf(room)
+  if(old_index===-1){
+    console.log("change_name error: no room in old name!")
+    return 
+  }
+  var new_index =value[new_name]['all_rooms'].indexOf(room)
+  if(new_index!==-1){
+    console.log("change_name error: room existed in new name!")
+    return 
+  }
+
+  value[old_name]['all_rooms'].splice(old_index,1)
+  value[new_name]['all_rooms'].push(room)
+  console.log('after',JSON.stringify(value,null,4))
+  put_document(name_index,JSON.stringify(value),name_index_doc_id)
 }
 function regularize_room_name(room_name){
           var splitted_name = room_name.split('-')

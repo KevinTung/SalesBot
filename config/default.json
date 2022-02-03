@@ -11,7 +11,8 @@
       "room": "juzibot-sales-room-2",
       "name": {
         "index":"juzibot-sales-name",
-        "docId": 1
+        "docId": 1,
+        "backup":10
         }
     },
     "corp":{
@@ -23,7 +24,23 @@
       "datasheetId":"dstedTCmf1RnY3b6gc",
       "updateTime":60000
     },
-
+    "names":{
+      "sales":[
+        "董森",
+        "宋宗强", 
+        "陈子曦", 
+        "冯伦",
+        "李传君",
+        "吴强强",
+        "孙文博",
+        "test"
+      ],
+      "after_sales":[
+        "闫小娟",
+        "曹啸",
+       "田荣生"
+      ]
+    },
     "lark":{
       "appId":"cli_a11cb78f1a78900b",
       "appKey":"v8EDxzVdkIipoEaIVtrqfgUoCWsrB1vB",
@@ -39,7 +56,7 @@
         "冯伦": "oc_6e7e17eb110be8b22c45fa1f84a92fe1",
         "李传君": "oc_a67d0ad8d2eee6520217ba5f5ab59879",
         "吴强强": "oc_94d5b1536c35c5bb0e2474d6c5a10d69",
-        "孙文": "oc_81d4b76dae3a7bcfece6f9b45bce9a4e",
+        "孙文博": "oc_81d4b76dae3a7bcfece6f9b45bce9a4e",
         "undefined": "oc_e297d4bc1d7e1747c995c7822e79a31f",
         "闫小娟": "oc_3e00b519456ce83688aa9490d98026b8",
         "曹啸":"oc_756d240baba47a3ffea38ca2e15eb047",

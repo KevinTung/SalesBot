@@ -1,9 +1,9 @@
-version: "3.0"
+version: "3.4"
 services:
   salesbot-temp:
     build: 
       context: .
       dockerfile: Dockerfile
-    env_file: ./config/.env
-    ports: 
-      - 9201:9200 
+    env_file: scripts/.env
+    network_mode: "host"
+    restart_policy: on-failure
