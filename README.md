@@ -29,11 +29,10 @@ npm install
 - Use [tmux](https://tmuxcheatsheet.com/) to run multiple processes in a single terminal
 
 ```
-tmux a #to open a new window
-#In tmux window:
+tmux a   #to open a new window
 Ctrl+B D #detach from tmux window
 Ctrl+B W #switch between windows
-Ctrl+D #close a window
+Ctrl+D   #close a window
 ```
 
 - Run the following 3 scripts in 3 terminals: 
