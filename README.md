@@ -7,25 +7,45 @@ For a toB company to sale its enterprise service, the sales need to communicate 
 ![Flowchart](https://github.com/KevinTung/sales-assistant/blob/main/assets/Flowchart.jpg)
 
 ## Getting Started 
-
 ### Prerequisites
-- docker 
-- npm
+- [tmux](https://github.com/tmux/tmux/wiki)
+- [docker](https://www.docker.com/)
+- [nodejs](https://nodejs.org/en/)
 
 ### Installation
 
+```
+git clone https://github.com/KevinTung/sales-assistant.git
+npm install 
+```
 
-## Usage 
-- git clone 
-- npm install 
+### Usage 
 
+```shell
+./scripts/modify_code_and_run.sh
+```
+
+- Edit the `config/default.json` file
+- Use [tmux](https://tmuxcheatsheet.com/) to run multiple processes in a single terminal
+
+```
+tmux a #to open a new window
+#In tmux window:
+Ctrl+B D #detach from tmux window
+Ctrl+B W #switch between windows
+Ctrl+D #close a window
+```
+
+- Run the following 3 scripts in 3 terminals: 
+
+```
+NODE_CONFIG_DIR=./config node src/vika-to-feishu.js 
+NODE_CONFIG_DIR=./config node src/vika-update-roomdb.js
+NODE_CONFIG_DIR=./config node update-vika.js
+```
 
 
 ## Contact 
-
-
-
-## Acknowledgement
-
+KevinTung - [@asd135441](https://twitter.com/asd135541) - email@example.com
 
 
