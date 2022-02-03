@@ -21,10 +21,6 @@ npm install
 
 ### Usage 
 
-```shell
-./scripts/modify_code_and_run.sh
-```
-
 - Edit the `config/default.json` file
 - Use [tmux](https://tmuxcheatsheet.com/) to run multiple processes in a single terminal
 
@@ -35,12 +31,18 @@ Ctrl+B W #switch between windows
 Ctrl+D   #close a window
 ```
 
-- Run the following 3 scripts in 3 terminals: 
+- Run the 3 undockerized programs in separate tmux terminals: 
 
 ```
 NODE_CONFIG_DIR=./config node src/vika-to-feishu.js 
 NODE_CONFIG_DIR=./config node src/vika-update-roomdb.js
 NODE_CONFIG_DIR=./config node update-vika.js
+```
+
+- Run the dockerized salesbot service
+
+```shell
+./scripts/modify_code_and_run.sh
 ```
 
 
