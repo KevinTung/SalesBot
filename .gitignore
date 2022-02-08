@@ -80,6 +80,6 @@ log
 data/
 # all_output/
 logs/
-config/
+# config/
 # assets/
 # all_output/
