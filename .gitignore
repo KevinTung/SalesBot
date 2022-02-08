@@ -78,8 +78,8 @@ log
 .env
 .env.*
 data/
-all_output/
+# all_output/
 logs/
 config/
-assets/
-all_output/
+# assets/
+# all_output/
