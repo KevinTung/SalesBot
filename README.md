@@ -6,14 +6,14 @@ For a company to sale its enterprise service, the sales need to communicate with
 
 ![Flowchart](https://github.com/KevinTung/sales-assistant/blob/main/assets/Flowchart.jpg)
 
-## [總體配置流程](https://k0auuqcihb.feishu.cn/docs/doccnKLFrlLJ7kcJIZHDdUhhWGx#GOFlKz)
+## [Overall Configuration](https://k0auuqcihb.feishu.cn/docs/doccnKLFrlLJ7kcJIZHDdUhhWGx#GOFlKz)
 ```
 【管理者】執行【產品準備1】和【產品準備2】，得到【售前售後名單, 企業名稱，警報配置，2個Vika表單的ID】
 【技術人員】根據【售前售後名單, 企業名稱，警報配置，2個Vika表單的ID】執行【部署系統】，使系統上線，通知【管理者】，正式運行
 【管理者、售前、售後】平時按照【產品使用流程】使用產品
 【技術人員】平時按照【技術使用流程】使用項目
 ```
-## [部署系統](https://k0auuqcihb.feishu.cn/docs/doccnKLFrlLJ7kcJIZHDdUhhWGx#GeHWT6)
+## [System Deployment](https://k0auuqcihb.feishu.cn/docs/doccnKLFrlLJ7kcJIZHDdUhhWGx#GeHWT6)
 ```
 【技術人員】根據【售前售後名單, 企業名稱，警報配置，2個Vika表單的ID】执行【部署系統】{
     config 指的是 sales-assistant/config/default.json 文件
@@ -46,7 +46,7 @@ For a company to sale its enterprise service, the sales need to communicate with
 }
 ```
 
-## [部署 OpenSearch](https://k0auuqcihb.feishu.cn/docs/doccnKLFrlLJ7kcJIZHDdUhhWGx#Coq5ne)
+## [Deploy OpenSearch](https://k0auuqcihb.feishu.cn/docs/doccnKLFrlLJ7kcJIZHDdUhhWGx#Coq5ne)
 ```
 【技術人員】在【服務器】上【部署OpenSearch】{
     1. 在 opensearch目錄下，執行 docker-compose up 
@@ -58,12 +58,9 @@ For a company to sale its enterprise service, the sales need to communicate with
 ```
 
 
-## [配置 Configuration](https://k0auuqcihb.feishu.cn/docs/doccnKLFrlLJ7kcJIZHDdUhhWGx#WW8HVI) 
+## [Configuration](https://k0auuqcihb.feishu.cn/docs/doccnKLFrlLJ7kcJIZHDdUhhWGx#WW8HVI) 
 
-## [使用流程](https://k0auuqcihb.feishu.cn/docs/doccnKLFrlLJ7kcJIZHDdUhhWGx#7D4yYM) 
-
-
-
+## [Usage](https://k0auuqcihb.feishu.cn/docs/doccnKLFrlLJ7kcJIZHDdUhhWGx#7D4yYM) 
 
 ## Appendix
 - Use [tmux](https://tmuxcheatsheet.com/) to run multiple processes in a single terminal
@@ -74,7 +71,13 @@ Ctrl+B D #detach from tmux window
 Ctrl+B W #switch between windows
 Ctrl+D   #close a window
 ```
-
+- Docker Usage
+```
+docker ps #check all running containers
+docker logs -f salesbot #check sales-bot logs
+docker stop salesbot #stop salesbot container
+docker rm salesbot #remove salesbot container
+```
 
 ## Contact 
 KevinTung - [@asd135441](https://twitter.com/asd135541) - email@example.com
