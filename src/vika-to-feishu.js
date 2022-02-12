@@ -11,7 +11,12 @@ import { PuppetLark } from 'wechaty-puppet-lark-2'
 import { Feishu } from 'lark-js-sdk';
 
 let lark = new Feishu(config_all.lark.appId, config_all.lark.appKey);
+const cycle_time = config_all.lark.cycle_time
+const tolerate_time = config_all.updateCycleTime.vika2Feishu
 var sales2chat = config_all.lark.sales2chat
+var channels = config_all.lark.channels
+var sales_alert = config_all.lark.salesAlert
+var after_sales_alert = config_all.lark.afterSalesAlert
 var alert_group = config_all.lark.channels.alert_group
 // var alert_group = "oc_151f493e3d8b15ded4b41520a84a2739"
 // var sales2chat = {
@@ -38,7 +43,7 @@ puppet.start().catch(async e => {
     // await puppet.stop()
     process.exit(-1)
 })
-const tolerate_time = 60 * 1000;
+
 async function puppet_start() {
     console.log("HIIII")
     vika_to_feishu()
@@ -52,7 +57,7 @@ async function get_vika_rooms() { //LIMIT: update only 1000 rooms, if a3.data.to
         pageSize: 1000
     })
     if (a3.success) {
-        console.log("succeeded queried", a3.data.records);
+        console.log("succeeded queried");
     } else {
         console.error(a3);
         return;
@@ -69,55 +74,71 @@ async function vika_to_feishu() {
     vika_rooms = vika_rooms.map((e) => {
         return e.fields
     })
-    console.log(vika_rooms)
+
+    // console.log(color_level[y.toString()])
+    // return
+    
     for (var vika_room of vika_rooms) {
         //ASSERT: if last replier is employee, then not_replied time == 0
         var last_replier = vika_room['最后说话者']
         var person_in_charge = vika_room['负责人']
         var room_name = vika_room['群聊名']
-        var not_replied_time = vika_room['负责人未回覆时间']
+        var not_replied_time = vika_room['负责人未回覆时间（分钟）']
         var last_replier = vika_room['最后说话者']
+        var phase = vika_room['群聊阶段']
         console.log(last_replier, person_in_charge, room_name, not_replied_time)
         //NOT REPLY Level ; how to make sure that each level is alerted only once? 
-        var need_send_message = false
+        
         var card_color
-        if (5 < not_replied_time && not_replied_time < 6) {//alert at 5
-            need_send_message = true
-            card_color = "turquoise"
-        } else if (Math.floor(not_replied_time) == 10) { //INFO: Floor operation is due to cycletime 1 mintues
-            need_send_message = true
-            card_color = "yellow"
-        } else if (Math.floor(not_replied_time) == 20) {
-            need_send_message = true
-            card_color = "orange"
-        } else if (Math.floor(not_replied_time) == 30) {
-            need_send_message = true
-            card_color = "red"
-        } else if ((Math.floor(not_replied_time) % 10 == 0) && (Math.floor(not_replied_time) / 10 >= 4)) {//40-41, 50-51, ....
-            need_send_message = true
-            card_color = "purple"
-        }else {
-            need_send_message = false
+        not_replied_time = Math.floor(not_replied_time)
+        var need_send_message = false
+        not_replied_time = 11
+        var alert
+        
+        //distinguish btw sales and after sales's config
+        if(phase === 'pre-sales'){
+            alert = sales_alert
+        }else if(phase==='after-sales'){
+            alert = after_sales_alert
         }
+       
+        const color_level = alert.color_level
+        
+        var time_list = Object.keys(color_level).map((e)=>{return parseInt(e)}).filter((e)=>{return !isNaN(e)})
+        
+        if(time_list.includes(not_replied_time)){
+            need_send_message = true
+            card_color = color_level[not_replied_time.toString()] 
+        }else{
+            var last_time = time_list[time_list.length-1]
+            console.log(not_replied_time,last_time,alert.cycle_time)
+            if((not_replied_time-last_time)%alert.cycle_time===0 && not_replied_time<=alert.until){
+                need_send_message = true
+                console.log("ER")
+                card_color = color_level["above"]
+            }
+        }
+        
         if (need_send_message) {
             mycard.elements[0]["content"] = `**${last_replier}** 的消息在 **${person_in_charge}** 负责的 **${room_name}** 已经超过 **${Math.floor(not_replied_time)}** 分钟没被回复啦! 加油加油​${"⛽️"}`;
             if (room_name == undefined) {
                 mycard.elements[0]["content"] += `\\n**${room} 还没有销售，请添加一位销售`
             }
             mycard.header.template = card_color
-            if (not_replied_time > 20) {
+            if (not_replied_time > alert.group_alert_threshold) {
                 await lark.message.send({
-                    chat_id: alert_group,
+                    chat_id: channels.target_roomid,// alert_group,
                     msg_type: 'interactive',
                     card: mycard,
                 });
             }
-            await lark.message.send({
-                chat_id: sales2chat[person_in_charge] ,
-                msg_type: 'interactive',
-                card: mycard,
-            });
+            // await lark.message.send({
+            //     chat_id: channels.target_roomid,//sales2chat[person_in_charge] ,
+            //     msg_type: 'interactive',
+            //     card: mycard,
+            // });
         }
+        
     }
 
 }

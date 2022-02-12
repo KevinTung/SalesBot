@@ -32,14 +32,16 @@ var client = new Client({
 
 import { Vika } from "@vikadata/vika";
 const vika = new Vika({ token: config_all.vika.token, fieldKey: "name" });
-var vika_datasheet_id = config_all.vika.datasheetId
+var vika_datasheet_id = config_all.vika.todayRoom
+var vika_allrooms_id = config_all.vika.allRooms
 const datasheet = vika.datasheet(vika_datasheet_id);
+const allRooms_datasheet = vika.datasheet(vika_allrooms_id);
 var msg_index = config_all.index.msg;
 var juzi_corp_name = config_all.corp.name
 var name_index = config_all.index.name.index
 var name_index_doc_id = config_all.index.name.docId
 var room_index = config_all.index.room
-var tolerate_time = config_all.vika.updateTime
+var tolerate_time = config_all.updateCycleTime.updateVika
 
 
 
@@ -59,12 +61,14 @@ setInterval(() => {
   console.log("Counter:", counter)
   counter += 1
   calculate_metric()
+
 }, tolerate_time);
 
 
 async function calculate_metric() {
   //ASSERT: calculate only today's metric, so the metric only depends on room, instead of in_charge and phase
   //in_charge might be "" ?
+  await vika_upload_new_room()
   var rooms = await get_all_rooms(room_index) //must not duplicate
   console.log("room db length:", rooms.length)
   sales_list = await get_all_names(2)
@@ -120,10 +124,51 @@ var vika_headermap = [
   { id: 'cnum', title: '顾客总回复数' },
   { id: 'last_replier', title: '最后说话者' },
   { id: 'last_reply', title: '最后一句话' },
-  { id: 'not_replied_time', title: '负责人未回覆时间' },
+  { id: 'not_replied_time', title: '负责人未回覆时间（分钟）' },
   { id: 'phase', title: '群聊阶段' },
 ]
 
+const vika_room_headermap = [
+  { id: 'name', title: '负责人' },
+  { id: 'room', title: '群聊名' },
+  { id: 'full_room_name', title: '完整群聊名' },
+  { id: 'phase', title: '群聊阶段' },
+]
+async function vika_upload_new_room(){
+
+  var rooms = await get_all_rooms(room_index) //must not duplicate
+  //console.log("room db length:", rooms.length)
+  var res = await allRooms_datasheet.records.query({
+    pageSize: 1000
+  })
+  if(!res.success){
+    console.log("vika_export_all_rooms retrieve data not success!")
+    return
+  }
+  var vika_rooms = res.data.records.map((e)=>{return e.fields['完整群聊名']})
+  rooms = rooms.filter((e)=>{return !vika_rooms.includes(e.room_name)})
+  
+  var datas = []
+  for(var room of rooms){
+    var metric_obj = {}
+    metric_obj["name"] = room["in_charge"]
+    metric_obj["full_room_name"] = room["room_name"]
+    metric_obj["room"] = regularize_room_name(room["room_name"])
+    metric_obj["phase"] = room["phase"]
+    datas.push(metric_obj)
+  }
+  
+  var entries = []
+
+  for(var data of datas){
+    var entry = {}
+    for (let i of vika_room_headermap) {
+      entry[i["title"]] = data[i["id"]]
+    }
+    entries.push({ "fields": entry })
+  }
+  create_vika(allRooms_datasheet,entries,10,30,1000)
+}
 async function vika_export_customer_record(datas) {
   //DEPENDS ON: room_db, name_db
   //ASSERT: No Duplicated rooms. Otherwise duplicated rooms will be re-created
@@ -168,56 +213,67 @@ async function vika_export_customer_record(datas) {
   //CREATE or UPDATE by batches 
   //the VIKA API upload frequency limit is 5times/sec
   //need to consider other process using the same API 
-  console.log("CREATE:", entries.length, "entries")
-  if (entries.length > 0) {
-    var upload_entries = []
-    for (var i in entries) {
-      upload_entries.push(entries[i])
-      if ((i % 10 == 9) || (i == entries.length - 1)) {
-        console.log("i==", i, "now create uploading...");
-        await datasheet.records.create(
-          upload_entries
-        ).then(response => {
-          if (response.success) {
-            console.log("succeeded");
-          } else {
-            console.error(response);
-          }
-        })
-        upload_entries = []
-      }
-      if (i % 30 == 29) { //3 times break 1.5 sec
-        sleep(1500)
-      }
-
-    }
-  }
-  sleep(1500)
-  console.log("UPDATE:", update_entries.length, "entries")
-  if (update_entries.length > 0) {
-    var upload_update_entries = []
-    for (var i in update_entries) {
-      //console.log(i)
-      upload_update_entries.push(update_entries[i])
-      if ((i % 10 == 9) || (i == update_entries.length - 1)) {
-        console.log("i==", i, "now update uploading...");
-        await datasheet.records.update(
-          upload_update_entries
-        ).then(response => {
-          if (response.success) {
-            console.log("succeeded");
-          } else {
-            console.error(response);
-          }
-        })
-        upload_update_entries = []
-      }
-      if (i % 40 == 39) {
-        sleep(1000)
-      }
-    }
-  }
+  //console.log(update_entries)
+  create_vika(datasheet,entries,10,30,1500)
+  update_vika(datasheet,update_entries,10,30,1500)
 }
+async function create_vika(vikasheet,data,batchSize,sleepInterval,sleepTime){
+  console.log("CREATE:", data.length, "entries")
+  if (data.length > 0) {
+    var upload = []
+    for (var i in data) {
+      //console.log(i)
+      upload.push(data[i])
+      if ((i % batchSize == (batchSize-1)) || (i == data.length - 1)) {
+        console.log("i==", i, "now creating...");
+        await vikasheet.records.create(
+          upload
+        ).then(response => {
+          if (response.success) {
+            console.log("succeeded");
+          } else {
+            console.error(response);
+          }
+        })
+        upload = []
+      }
+      if (i % sleepInterval == (sleepInterval-1)) {
+        sleep(sleepTime)
+      }
+    }
+  }
+  sleep(sleepTime)
+}
+async function update_vika(vikasheet,data,batchSize,sleepInterval,sleepTime){
+  console.log("UPDATE:", data.length, "entries")
+  if (data.length > 0) {
+    var upload = []
+    for (var i in data) {
+      //console.log(i)
+      upload.push(data[i])
+      if ((i % batchSize == (batchSize-1)) || (i == data.length - 1)) {
+        console.log("i==", i, "now update uploading...");
+        await vikasheet.records.update(
+          upload
+        ).then(response => {
+          if (response.success) {
+            console.log("succeeded");
+          } else {
+            console.error(response);
+          }
+        })
+        upload = []
+      }
+      if (i % sleepInterval == (sleepInterval-1)) {
+        sleep(sleepTime)
+      }
+    }
+  }
+  sleep(sleepTime)
+}
+
+
+
 function sleep(milliseconds) {
   const date = Date.now();
   let currentDate = null;
@@ -422,7 +478,8 @@ function room_query(room_name) {
             range: {
               "payload.timestamp": {
                 gte: "now/d",
-                lt: "now/s"
+                lt: "now/s",
+                time_zone:"Asia/Shanghai"
               }
             }
           }

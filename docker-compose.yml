@@ -1,9 +1,9 @@
 version: "3.4"
 services:
   salesbot-temp:
-    build: 
-      context: .
-      dockerfile: Dockerfile
+    image: "salesassistant_salesbot-temp"
     env_file: scripts/.env
     network_mode: "host"
-    restart_policy: on-failure
+    restart: always
+    volumes: 
+      - .:/root/bot 

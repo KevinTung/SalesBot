@@ -27,16 +27,41 @@ var tolerate_time = config_all.vika.updateTime
 var backup_id = config_all.index.name.backup
 var sales_list = config_all.names.sales
 var after_sales_list = config_all.names.after_sales
+var delete_names = config_all.names.delete_names //to delete names not in the list 
+update_name(sales_list,after_sales_list,delete_names)
 
-// var all_sales = ['童子铨','曾璐','陈子曦','董森','冯伦','韩祥宇','宋宗强','王建超']
-// change_room("李传君","吴强强","句子科技服务群-【金佰利】")
-// await update_name(all_sales)
-// await get_name_list()
-// await delete_name('曾璐')
-// await delete_name('韩祥宇')
-// await delete_name('王建超')
-// delete_room('孙文博',"句子互动服务群-511专家")
-update_name(sales_list,after_sales_list)
+async function update_undefined_name(){
+  var rooms = await get_all_rooms(room_index)
+  for(var room of rooms){
+   
+    // room._source.in_charge=undefined
+    console.log(room._source.in_charge)
+    // if(room._source.in_charge===''){
+    //   console.log(room)
+    //   room._source.in_charge = undefined
+    //   console.log(room)
+    //   await put_document(room_index,room._source,room._id)
+    // }
+   
+    // if(room._source.in_charge===undefined){
+    //     console.log("e",room,"k")
+    // }
+  }
+}
+
+async function delete_rooms(room_name_list){
+  var rooms = await get_all_rooms(room_index)
+  for(var room of rooms){
+    if(room_name_list.includes(room._source.room_name) ){
+      console.log("e",room._source,"k")
+      // await client.delete({
+      //   id: room._id,
+      //   index: room_index
+      // })
+    }
+  }
+}
+
 async function add_room(name,room){
   var value = await client.get({
       id: name_index_doc_id,
@@ -86,7 +111,25 @@ async function delete_room(name,room){
   console.log('after',JSON.stringify(value,null,4))
   //await put_document(name_index,JSON.stringify(value),name_index_doc_id)
 }
-
+async function get_all_rooms(room_index) {
+  // Search for the document.
+  var query = {
+    query: {
+      match_all: {
+      },
+    },
+  };
+  var response = await client.search({
+    index: room_index,
+    body: query,
+    size: 1000,
+  });
+  var r = []
+  response.body.hits.hits.forEach((e) => {
+    r.push(e)
+  });
+  return r
+}
 async function change_room(old_name,new_name,room){
   var value = await client.get({
     id: name_index_doc_id,

@@ -134,7 +134,7 @@ async function onMessage(msg) {
         room_obj["in_charge"] = searched_sales[0]
         add_room(searched_sales[0],room_name)
       }else{
-        room_obj["in_charge"] = ""
+        room_obj["in_charge"] = undefined
         add_room("undefined",room_name)
       }
       console.log("New Room:", room_obj)

@@ -34,14 +34,15 @@ import { Vika } from "@vikadata/vika";
 const vika = new Vika({ token: config_all.vika.token, fieldKey: "name" });
 var vika_datasheet_id = config_all.vika.datasheetId
 const datasheet = vika.datasheet(vika_datasheet_id);
-
+var vika_allrooms_id = config_all.vika.allRooms
+const allRooms_datasheet = vika.datasheet(vika_allrooms_id);
 var msg_index = config_all.index.msg;
 var juzi_corp_name = config_all.corp.name
 var name_index = config_all.index.name.index
 var name_index_doc_id = config_all.index.name.docId
 var room_index = config_all.index.room
-var tolerate_time = config_all.vika.updateTime
-
+var tolerate_time = config_all.updateCycleTime.vika2Db
+var backup_id = config_all.index.backup_id
 
 var sales_list = await get_all_names(2)
 var after_sales_list = await get_all_names(3)
@@ -67,17 +68,21 @@ async function vika_update_roomdb() {
     for (var db_room of db_rooms) db_room_dict[regularize_room_name(db_room._source["room_name"])] = db_room
     var db_room_names = db_rooms.map((e) => { return regularize_room_name(e._source["room_name"]) })
     
-    var vika_rooms = await get_vika_rooms() //ASSERT a3.data.total <= 1000
+    var vika_rooms = await get_vika_rooms(allRooms_datasheet) //ASSERT a3.data.total <= 1000
+    var today_vika_rooms = await get_vika_rooms(datasheet,true) //ASSERT a3.data.total <= 1000
     if(vika_rooms==undefined){
         console.log("get_vika_rooms FAILED")
         return
     }
-    vika_rooms = vika_rooms.map((e) => { return e })
-    //console.log(db_room_dict)
+    if(today_vika_rooms==undefined){
+        console.log("get today's vika_rooms FAILED")
+        return
+    }
+
     //match vika's rooms with db's 
     var update_entries = []
     var vika_update_rooms = []
-   
+   //Check All Room's Update 
     for (var vika_room of vika_rooms) {
         var valid = false
         var update_entry = { recordId: vika_room["recordId"], "fields": { "系统信息": [] } }
@@ -100,10 +105,15 @@ async function vika_update_roomdb() {
             }
             else if (vika_room.fields['群聊阶段'] === 'after-sales') {
                 if (after_sales_list.includes(vika_room.fields["负责人"])) {//valid
-                    vika_update_rooms.push(vika_room)
-                    valid = true 
-                    update_entry["fields"]["系统信息"].push("合法")
-                    update_entries.push(update_entry) 
+                    if(vika_room.fields['核准进入售后阶段']===true){
+                        vika_update_rooms.push(vika_room)
+                        valid = true 
+                        update_entry["fields"]["系统信息"].push("已成功更新至售后阶段")
+                        update_entries.push(update_entry) 
+                    }else{
+                        update_entry["fields"]["系统信息"].push("等待管理员核准")
+                        update_entries.push(update_entry) 
+                    }
                 }
                 else {
                     update_entry["fields"]["系统信息"].push("负责人非售后")
@@ -116,32 +126,43 @@ async function vika_update_roomdb() {
         }
         if(valid == true){
             var room = vika_room.fields['群聊名']
-            var old_name = db_room_dict[room]
+            var old_name = db_room_dict[room]._source['in_charge']
             var new_name = vika_room.fields["负责人"]
             
             if(old_name!==new_name){
                 await change_room(old_name,new_name,room)
             }
         }
+    }
+
+    var today_update_entries = []
+    for(var today_room of today_vika_rooms){
         //Clean timeout: push a blank msg in the group
-        if(vika_room.fields['消除未回覆记录'] === true){ 
+        var update_entry = { recordId: today_room["recordId"], "fields": { "系统信息": [] } }
+        if(today_room.fields['消除未回覆记录']===true){ 
             var mm = JSON.parse(fs.readFileSync('utils/msgobj.json'))
             mm.payload.fromInfo.payload.corporation = juzi_corp_name
-            mm.payload.fromInfo.payload.name = vika_room.fields["负责人"]
-            mm.payload.roomInfo.topic = vika_room.fields['完整群聊名']
+            mm.payload.fromInfo.payload.name = today_room.fields["负责人"]
+            mm.payload.roomInfo.topic = today_room.fields['完整群聊名']
             mm.payload.timestamp = new Date()
             mm.payload.text = 'blank bubble'
             await put_msg(msg_index, JSON.stringify(mm)); //id in ES and in wechat is the same 
             update_entry["fields"]["系统信息"].push("已消除延迟记录") //NEED: delete
             update_entry["fields"]["消除未回覆记录"] = false
-            update_entries.push(update_entry)
         }
+        today_update_entries.push(update_entry)
     }
+    //console.log(today_update_entries)
+    console.log("updating today:",today_update_entries.length)
+    await vika_update(today_update_entries,datasheet)
+
     //make sure write_db operation is save
+    console.log("updating dbroom:",vika_update_rooms.length)
     await db_room_update(vika_update_rooms, db_room_dict)
 
     //push system message
-    await vika_update(update_entries) 
+    console.log("updating all rooms:",update_entries.length)
+    await vika_update(update_entries,allRooms_datasheet) 
 }
 
 
@@ -154,6 +175,7 @@ async function change_room(old_name,new_name,room){
   await put_document(name_index,JSON.stringify(value),backup_id)
 
   var names = Object.keys(value)
+  //console.log("NAMES:",names,"old name:",old_name,"new name:",new_name)
   if(!names.includes(old_name)){
     console.log("change_name error: no old name!")
     return 
@@ -217,7 +239,7 @@ async function put_msg(index_name, document) {
         refresh: true,
     });
 }
-async function vika_update(update_entries) {
+async function vika_update(update_entries,sheet) {
     console.log("UPDATE:", update_entries.length, "entries")
 
     if (update_entries.length > 0) {
@@ -227,7 +249,7 @@ async function vika_update(update_entries) {
             upload_update_entries.push(update_entries[i])
             if ((i % 10 == 9) || (i == update_entries.length - 1)) {
                 console.log("i==", i, "now update uploading...");
-                await datasheet.records.update(
+                await sheet.records.update(
                     upload_update_entries
                 ).then(response => {
                     if (response.success) {
@@ -239,7 +261,7 @@ async function vika_update(update_entries) {
                 upload_update_entries = []
             }
             if (i % 30 == 29) {
-                sleep(1500)
+                sleep(1000)
             }
         }
     }
@@ -252,11 +274,19 @@ function sleep(milliseconds) {
     } while (currentDate - date < milliseconds);
   }
   
-async function get_vika_rooms() { //LIMIT: update only 1000 rooms, if a3.data.total > 1000, need to move to next page until no results
-    var a3 = await datasheet.records.query({
-        filterByFormula: `AND(NOT(BLANK()),IS_AFTER({上次更新时间}，TODAY()))`,
-        pageSize: 1000
-    })
+async function get_vika_rooms(sheet,today=false) { //LIMIT: update only 1000 rooms, if a3.data.total > 1000, need to move to next page until no results
+    var a3 
+    if(today){
+        a3 = await sheet.records.query({
+            filterByFormula: `AND(NOT(BLANK()),IS_AFTER({上次更新时间}，TODAY()))`,
+            pageSize: 1000
+        })
+    }else{
+        a3 = await sheet.records.query({
+            pageSize: 1000
+        })
+    }
+    
     if (a3.success) {
         //console.log("succeeded queried", a3.data.records);
     } else {
