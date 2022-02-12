@@ -14,17 +14,15 @@ For a company to sale its enterprise service, the sales need to communicate with
 【技術人員】平時按照【技術使用流程】使用項目
 ```
 ## [System Deployment](https://k0auuqcihb.feishu.cn/docs/doccnKLFrlLJ7kcJIZHDdUhhWGx#GeHWT6)
-【技術人員】根據【售前售後名單, 企業名稱，警報配置，2個Vika表單的ID】执行【部署系統】{
-    
-### 
+### Input: 
+Need to get sales-list, corporation name, alert-settings and 2 Vika sheets' ID from Managers.
+### Process:
 1. make sure that you had created a Feishu Bot
 2. Deploy a server with docker installed
 ```
 git clone https://github.com/KevinTung/sales-assistant.git
 npm install
 ```
-
-### Product Configuration
 1. Fill the sales list in `config.names.sales, config.names.after_sales`
 ```
 "names":{
