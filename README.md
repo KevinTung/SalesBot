@@ -14,54 +14,142 @@ For a company to sale its enterprise service, the sales need to communicate with
 【技術人員】平時按照【技術使用流程】使用項目
 ```
 ## [System Deployment](https://k0auuqcihb.feishu.cn/docs/doccnKLFrlLJ7kcJIZHDdUhhWGx#GeHWT6)
-```
 【技術人員】根據【售前售後名單, 企業名稱，警報配置，2個Vika表單的ID】执行【部署系統】{
-    config 指的是 sales-assistant/config/default.json 文件
-    env 指的是 sales-assistant/config/.env 文件
-    確認已經【創建飛書銷售機器人】
-    #產品配置
-    0. 將名單填入 config 的 names.sales, names.after_sales_
-    1. 根據名單，透過【某段代碼】，取得群聊名稱，填入 config 的 lark.channels, lark.sales2chat
-    2. 根據警報配置，配置config 的 lark.salesAlert, afterSalesAlert
-    3. 根據企業名稱，配置config 的 corp.name
-    4. 【辦Vika帳號】，將vika的帳號ID填入vika.token, 將2個vika表單的ID（今日群聊、群聊總表）填入vika.todayRoom, vika.allRooms
     
-    #技術配置
-    配置服務器、git clone項目，npm install，安裝docker
-    執行【部署OpenSearch】取得並配置 config 的 dbConfig,index.msg,index.room,index.name
-    配置 env 的 DOCKER_NAME,TZ,WECHATY_PUPPET_SERVICE_NO_TLS_INSECURE_CLIENT,WECHATY_LOG,WECHATY_PUPPET,WECHATY_PUPPET_SERVICE_TOKEN
-    執行 ./scripts/modify_code_and_run.sh
-    執行【名單註冊】：
-        NODE_CONFIG_DIR=./config node src/update-name.js
-    開啟三個tmux窗口，分別執行：
-        NODE_CONFIG_DIR=./config node src/vika-to-feishu.js 
-        NODE_CONFIG_DIR=./config node src/vika-update-roomdb.js
-        NODE_CONFIG_DIR=./config node src/update-vika.js
- 
-    配置 timeZone，這將決定【Vika今日群聊表單】的時間範圍
-    配置 UpdateCycleTime，這將決定【Vika表單，數據庫，飛書推送】的更新頻率(微秒），默認是一分鐘(60000)
-    
-    檢驗：透過 docker logs -f salesbot 確認salesbot運行順利，在三個tmux窗口內確認三份代碼運行順利
-    返回【總配置流程】
+### 
+1. make sure that you had created a Feishu Bot
+2. Deploy a server with docker installed
+```
+git clone https://github.com/KevinTung/sales-assistant.git
+npm install
+```
+
+### Product Configuration
+1. Fill the sales list in `config.names.sales, config.names.after_sales`
+```
+"names":{
+  "sales":[
+    "Andy",
+    "Ben", 
+    "Carl"
+  ],
+  "after_sales":[
+    "Daniel",
+    "Emily"
+  ],
+  "delete_names":false  #if you want to delete names not in the list from name_db 
+},
+```
+2. Get the chatId based on sales list
+```
+node utils/get_chat_ids.js 
+
+Output:
+[
+[name1,chatId1],
+[name2,chatId2],
+...
+]
+
+```
+3. Configure lark. All names in the sales list need to fill in sales2chat.
+```
+"lark":{
+ "channels":{
+    "alert_group":"oc_xxx"   #group chat 
+    "test_roomid":"oc_xxx",  #in dev phase, let msg flow here instead of formal Feishu groups
+  },
+  "sales2chat":{ #individual chat
+    "name1": "chatId1", 
+    "name2": "chatId2",
+    ...
+  },
 }
 ```
-
-## [Deploy OpenSearch](https://k0auuqcihb.feishu.cn/docs/doccnKLFrlLJ7kcJIZHDdUhhWGx#Coq5ne)
+4. Configure lark.salesAlert, lark.afterSalesAlert
 ```
-【技術人員】在【服務器】上【部署OpenSearch】{
-    1. 在 opensearch目錄下，執行 docker-compose up 
-    2. 讓 OpenSearch跑在9200端口，並讓OpenSearch DashBoard跑在5601端口，得到【localhost,protocol,port,auth】
-    3. 下載 OpenSearch Js SDK , 跑通 Sample Code
-    4. 創建三個索引：msg,room,name,得到【三個 index】
-    返回【localhost,protocol,port,auth，三個 index】到【部署系統】
+"salesAlert":{
+    "color_level":{  
+      "5":"turquoise", //send turquoise card at 5 mins
+      "10":"yellow", //send yellow card at 10 mins
+      "20":"orange",
+      "30":"red",
+      "40":"purple",
+      "50":"blue",
+      "above":"grey"//send grey card after 50 mins
+    },
+    "cycle_time":10, //starting from 50, send a grey card every 10 mins, until 70
+    "until":70,
+    "group_alert_threshold":20 //also send to group chat after 20 mins
+},
+"afterSalesAlert":{ //對於售後也是一樣的配置邏輯
 }
 ```
+5. Configure corp.name based on corporation name on WeCom. Every employee has to have the same name, otherwise they will be treated as customer. 
+6. Create Vika account and fill vika.token as your personal ID and (vika.todayRoom, vika.allRooms) as the 2 datasheets' ID （今日群聊、所有群聊）
 
+7. install OpenSearch 
+```
+cd opensearch && docker-compose up
+```
+- Configure dbConfig: 
+```
+"dbConfig": {
+  "host": "localhost",
+  "protocol":"https",
+  "port": 9200,
+  "auth": "admin:admin"
+},
+```
+- download [Opensearch JS SDK](https://github.com/opensearch-project/opensearch-js) and make sure that OpenSearch functions correctly
+```
+npm i @opensearch-project/opensearch
+cd utils
+NODE_CONFIG_DIR=./config node utils/opensearch-test.js
+```
+- Configure the following indexes: 
+```
+"index":{
+  "msg": "opensearch-index-for-messages",
+  "room": "opensearch-index-for-rooms",
+  "name": {
+    "index":"opensearch-index-for-names",
+    "docId": 1,
+    "backup":10
+    }
+},
+```
+- Create indexes in Opensearch
+```
+NODE_CONFIG_DIR=./config node utils/create_indexes.js
+```
 
-## [Configuration](https://k0auuqcihb.feishu.cn/docs/doccnKLFrlLJ7kcJIZHDdUhhWGx#WW8HVI) 
+update sales-list:
+```
+NODE_CONFIG_DIR=./config node src/update-name.js
+```
+9. Get a WECHATY_PUPPET_SERVICE_TOKEN and Configure sales-assistant/scripts/.env 
+``` 
+DOCKER_NAME=salesbot
+TZ=Asia/Shanghai
+WECHATY_PUPPET_SERVICE_NO_TLS_INSECURE_CLIENT=true
+WECHATY_LOG=error
+WECHATY_PUPPET=wechaty-puppet-service
+WECHATY_PUPPET_SERVICE_TOKEN=<YOUR_WECHATY_TOKEN>
+```
+5. Configure timeZone，which decides how to count as 'a day' for Vika's 'today's group' 
+6. Configure UpdateCycleTime, which decides vika-to-feishu.js, update-vika.js, and vika_update_roomdb.js's update frequencies (default:60000ms)
+7. If in dev mode，set is_developing to true, and all the alert will flow towards test_roomid
+
 
 ## [Usage](https://k0auuqcihb.feishu.cn/docs/doccnKLFrlLJ7kcJIZHDdUhhWGx#7D4yYM) 
-
+```
+./scripts/build_image.sh #build image after modifying code
+./scritps/run_all.sh     #start all containers
+./scritps/stop_all.sh    #stop all containers
+docker logs -f <container_name> #check a container's log
+docker ps #check all running containers
+```
 ## Appendix
 - Use [tmux](https://tmuxcheatsheet.com/) to run multiple processes in a single terminal
 
@@ -70,13 +158,6 @@ tmux a   #to open a new window
 Ctrl+B D #detach from tmux window
 Ctrl+B W #switch between windows
 Ctrl+D   #close a window
-```
-- Docker Usage
-```
-docker ps #check all running containers
-docker logs -f salesbot #check sales-bot logs
-docker stop salesbot #stop salesbot container
-docker rm salesbot #remove salesbot container
 ```
 
 ## Contact 
