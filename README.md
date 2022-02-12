@@ -126,7 +126,7 @@ update sales-list:
 ```
 NODE_CONFIG_DIR=./config node src/update-name.js
 ```
-9. Get a WECHATY_PUPPET_SERVICE_TOKEN and Configure sales-assistant/scripts/.env 
+8. Get a WECHATY_PUPPET_SERVICE_TOKEN and Configure sales-assistant/scripts/.env 
 ``` 
 DOCKER_NAME=salesbot
 TZ=Asia/Shanghai
@@ -135,9 +135,9 @@ WECHATY_LOG=error
 WECHATY_PUPPET=wechaty-puppet-service
 WECHATY_PUPPET_SERVICE_TOKEN=<YOUR_WECHATY_TOKEN>
 ```
-5. Configure timeZone，which decides how to count as 'a day' for Vika's 'today's group' 
-6. Configure UpdateCycleTime, which decides vika-to-feishu.js, update-vika.js, and vika_update_roomdb.js's update frequencies (default:60000ms)
-7. If in dev mode，set is_developing to true, and all the alert will flow towards test_roomid
+9. Configure timeZone，which decides how to count as 'a day' for Vika's 'today's group' 
+10. Configure UpdateCycleTime, which decides vika-to-feishu.js, update-vika.js, and vika_update_roomdb.js's update frequencies (default:60000ms)
+11. If in dev mode，set is_developing to true, and all the alert will flow towards test_roomid
 
 
 ## [Usage](https://k0auuqcihb.feishu.cn/docs/doccnKLFrlLJ7kcJIZHDdUhhWGx#7D4yYM) 
