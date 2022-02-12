@@ -4,7 +4,17 @@
 ## About the Project 
 For a company to sale its enterprise service, the sales need to communicate with the potential customers effectively.  As each sales are overloaded with customers, they are prone to delayed response and low-quality response.  To evaluate the conversation between sales and customers requires huge labor works from manager and HRs.  Therefore, a sales-assistant chatbot to record, analyze, and visualize the metrics of the conversation comes in handy. 
 
+### System Structure
 ![Flowchart](https://github.com/KevinTung/sales-assistant/blob/main/assets/SystemStructure.jpg)
+我們將系統解構成前端、puppet、後端代碼、以及數據庫。
+We structure the system into user, frontend, puppet, backend code, and database. 
+首先，用戶和銷售每日會有許多新群與新消息，這些消息透過Wechaty捕獲，在`sales-bot.js`中統一存入`msg_db`，同時進行邏輯判斷，若有新建立的群，則會記錄在`room_db`內。
+
+Firstly, there are lots of new rooms and messages in Wechat, which are listened and captured through Wechaty and saved in `msg_db` through `sales-bot.js`. 
+Secondly, `update-vika.js` analyze room data and msg data and show it on Vika in real time.  Managers can see all rooms' status and find man-made or bot-made problems.  When pre-sales finish their jobs, they switch the rooms' phase into after-sales on Vika, which should be approved by the managers then.  These changes are checked by `vika-update-roomdb.js`.  Only when the changes are valid will the room_db be modified as well. 
+
+Finally, `vika-to-feishu.js` takes vika's room data, turn different level of delayed reply into message cards, and send them to Feishu through Lark Puppet.   
+If the manager want to change the sales-list, just modify `config/default.json` and execute `update-name.js`.  To configure the alert policy or other parameters, modify `config/default.json` and restart the system.  
 
 ## [Overall Configuration](https://k0auuqcihb.feishu.cn/docs/doccnKLFrlLJ7kcJIZHDdUhhWGx#GOFlKz)
 ```
