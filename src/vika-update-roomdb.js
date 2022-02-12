@@ -32,7 +32,7 @@ var client = new Client({
 });
 import { Vika } from "@vikadata/vika";
 const vika = new Vika({ token: config_all.vika.token, fieldKey: "name" });
-var vika_datasheet_id = config_all.vika.datasheetId
+var vika_datasheet_id = config_all.vika.todayRoom
 const datasheet = vika.datasheet(vika_datasheet_id);
 var vika_allrooms_id = config_all.vika.allRooms
 const allRooms_datasheet = vika.datasheet(vika_allrooms_id);

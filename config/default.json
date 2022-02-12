@@ -50,10 +50,11 @@
       "appId":"cli_a11cb78f1a78900b",
       "appKey":"v8EDxzVdkIipoEaIVtrqfgUoCWsrB1vB",
       "channels":{
-        "target_roomid":"oc_f8bf4c888c663a7f3aac4ff3452bc3d4",
+        "test_roomid":"oc_f8bf4c888c663a7f3aac4ff3452bc3d4",
         "BBIWY_group_id":"oc_a1f098656192c592e21aae7175219d46",
         "alert_group":"oc_151f493e3d8b15ded4b41520a84a2739"
       },
+      "is_developing":false,
       "sales2chat":{
         "董森": "oc_7ff99d4403ba04a6129dfb737e24739f",
         "宋宗强": "oc_df395b0182a51cec39b09f81534a09f2",
@@ -78,21 +79,21 @@
           "50":"blue",
           "above":"grey"
         },
-        "cycle_time":7,
-        "until":70,
+        "cycle_time":10,
+        "until":10000,
         "group_alert_threshold":20
       },
       "afterSalesAlert":{
         "color_level":{
           "5":"turquoise",
-          "11":"yellow",
-          "22":"orange",
+          "10":"yellow",
+          "20":"orange",
           "30":"red",
           "40":"purple",
-          "51":"blue",
+          "50":"blue",
           "above":"grey"
         },
-        "cycle_time":7,
+        "cycle_time":10,
         "until":70,
         "group_alert_threshold":20
       }

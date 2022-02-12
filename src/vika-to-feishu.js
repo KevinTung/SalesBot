@@ -3,9 +3,8 @@ const config_all = config.get('All');
 
 import { Vika } from "@vikadata/vika";
 const vika = new Vika({ token: config_all.vika.token, fieldKey: "name" });
-var vika_datasheet_id = config_all.vika.datasheetId
+var vika_datasheet_id = config_all.vika.todayRoom
 const datasheet = vika.datasheet(vika_datasheet_id);
-
 //LARK PUPPET
 import { PuppetLark } from 'wechaty-puppet-lark-2'
 import { Feishu } from 'lark-js-sdk';
@@ -15,6 +14,7 @@ const cycle_time = config_all.lark.cycle_time
 const tolerate_time = config_all.updateCycleTime.vika2Feishu
 var sales2chat = config_all.lark.sales2chat
 var channels = config_all.lark.channels
+var is_developing = config_all.lark.is_developing
 var sales_alert = config_all.lark.salesAlert
 var after_sales_alert = config_all.lark.afterSalesAlert
 var alert_group = config_all.lark.channels.alert_group
@@ -92,7 +92,6 @@ async function vika_to_feishu() {
         var card_color
         not_replied_time = Math.floor(not_replied_time)
         var need_send_message = false
-        not_replied_time = 11
         var alert
         
         //distinguish btw sales and after sales's config
@@ -103,7 +102,6 @@ async function vika_to_feishu() {
         }
        
         const color_level = alert.color_level
-        
         var time_list = Object.keys(color_level).map((e)=>{return parseInt(e)}).filter((e)=>{return !isNaN(e)})
         
         if(time_list.includes(not_replied_time)){
@@ -111,32 +109,48 @@ async function vika_to_feishu() {
             card_color = color_level[not_replied_time.toString()] 
         }else{
             var last_time = time_list[time_list.length-1]
-            console.log(not_replied_time,last_time,alert.cycle_time)
-            if((not_replied_time-last_time)%alert.cycle_time===0 && not_replied_time<=alert.until){
+            // console.log(not_replied_time,last_time,alert.cycle_time)
+            if( last_time<not_replied_time && (not_replied_time-last_time)%alert.cycle_time===0 && not_replied_time<=alert.until){
                 need_send_message = true
-                console.log("ER")
                 card_color = color_level["above"]
             }
         }
-        
+        // console.log("IS DEV:",is_developing)
         if (need_send_message) {
             mycard.elements[0]["content"] = `**${last_replier}** 的消息在 **${person_in_charge}** 负责的 **${room_name}** 已经超过 **${Math.floor(not_replied_time)}** 分钟没被回复啦! 加油加油​${"⛽️"}`;
             if (room_name == undefined) {
                 mycard.elements[0]["content"] += `\\n**${room} 还没有销售，请添加一位销售`
             }
             mycard.header.template = card_color
-            if (not_replied_time > alert.group_alert_threshold) {
+            if(is_developing){
+                if (not_replied_time > alert.group_alert_threshold) {
+                    await lark.message.send({
+                        chat_id: channels.test_roomid,
+                        msg_type: 'interactive',
+                        card: mycard,
+                    });
+                }
                 await lark.message.send({
-                    chat_id: channels.target_roomid,// alert_group,
+                    chat_id: channels.test_roomid,
+                    msg_type: 'interactive',
+                    card: mycard,
+                });
+            }else{
+                if (not_replied_time > alert.group_alert_threshold) {
+                    await lark.message.send({
+                        chat_id: channels.alert_group,
+                        msg_type: 'interactive',
+                        card: mycard,
+                    });
+                }
+                await lark.message.send({
+                    chat_id: sales2chat[person_in_charge] ,
                     msg_type: 'interactive',
                     card: mycard,
                 });
             }
-            // await lark.message.send({
-            //     chat_id: channels.target_roomid,//sales2chat[person_in_charge] ,
-            //     msg_type: 'interactive',
-            //     card: mycard,
-            // });
+            
+            
         }
         
     }
