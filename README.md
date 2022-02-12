@@ -147,6 +147,7 @@ WECHATY_PUPPET_SERVICE_TOKEN=<YOUR_WECHATY_TOKEN>
 ./scritps/stop_all.sh    #stop all containers
 docker logs -f <container_name> #check a container's log
 docker ps #check all running containers
+NODE_CONFIG_DIR=./config node src/update-vika.js #to run a nodejs file directly in server, you need to specify the path of config file
 ```
 ## Appendix
 - Use [tmux](https://tmuxcheatsheet.com/) to run multiple processes in a single terminal
