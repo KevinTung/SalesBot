@@ -42,7 +42,7 @@ var name_index = config_all.index.name.index
 var name_index_doc_id = config_all.index.name.docId
 var room_index = config_all.index.room
 var tolerate_time = config_all.updateCycleTime.updateVika
-
+const dividers = ["------","- - - - - - - - - - - - - - -"]
 
 
 
@@ -404,7 +404,7 @@ function print_a_room(response, in_charge, print_msg = false) {//ASSERT response
   metric_obj["emnum"] = emnum
   metric_obj["cnum"] = cnum
   metric_obj["last_replier"] = last_replier
-  metric_obj["last_reply"] = last_reply
+  metric_obj["last_reply"] = beautify(last_reply)
   metric_obj["not_replied_time"] = parseFloat(not_replied_time)
   return metric_obj
 }
@@ -460,6 +460,16 @@ async function get_all_names(option) {
   }
 }
 
+function beautify(text){
+  var a = text.split(dividers[0])
+  var b = []
+  for(var i=0; i<a.length; i++){
+    var c = a[i].split(dividers[1])
+    b = b.concat(c)
+  }
+  var d = b[b.length-1].split("\n")
+  return d[d.length-1]
+}
 function room_query(room_name) { 
   var body = {
     sort: [

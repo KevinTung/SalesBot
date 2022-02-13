@@ -1,7 +1,3 @@
-
-
-
-
 import config from 'config';
 const config_all = config.get('All');
 "use strict"; //what's this?
