@@ -183,6 +183,43 @@ After Sales: [ 'Daniel', 'Emily' ]
 - msg_db
 store the data from Wechaty with little modification:
 ```
+[
+  { //the first message....
+ _events: {},
+  _eventsCount: 0,
+  id: '1155227',
+  payload: {
+    filename: '',
+    fromId: '182xxxxxxxx',
+    id: '1155227',
+    mentionIdList: [],
+    roomId: 'R:100xxxxxxxxx',
+    text: 'hello',
+    timestamp: 1642729893000,
+    toId: '',
+    type: 7,
+    fromInfo: {
+      _events: {},
+      _eventsCount: 0,
+      id: '182xxxxxxxx',
+      payload: [Object]
+    },
+    toInfo: {},
+    roomInfo: {
+      _events: {},
+      _eventsCount: 0,
+      id: 'R:100xxxxxxxxx',
+      payload: [Object],
+      topic: '句子秒回&兔展'
+    }
+  },
+  {
+    //another message....
+  },
+ ...
+]
+```
+```
 $ NODE_CONFIG_DIR=./config node utils/get_room_msg.js '句子秒回&兔展'
 Output:
 12/16/2021 2:14:17 PM 句子秒回&兔展 customerA:好，我明白了，那我这边先向上汇报一下，如果有需要我具体找你沟通哈！ 
