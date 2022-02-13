@@ -153,14 +153,78 @@ WECHATY_PUPPET_SERVICE_TOKEN=<YOUR_WECHATY_TOKEN>
 
 
 ## [Usage](https://k0auuqcihb.feishu.cn/docs/doccnKLFrlLJ7kcJIZHDdUhhWGx#7D4yYM) 
+
+- Docker Operation
 ```
 ./scripts/build_image.sh #build image after modifying code
 ./scritps/run_all.sh     #start all containers
 ./scritps/stop_all.sh    #stop all containers
 docker logs -f <container_name> #check a container's log
 docker ps #check all running containers
-NODE_CONFIG_DIR=./config node src/update-vika.js #to run a nodejs file directly in server, you need to specify the path of config file
 ```
+- To run a nodejs file directly in server, you need to specify the path of config file
+```
+NODE_CONFIG_DIR=./config node src/update-vika.js 
+```
+- To update sales list, modify `config/default.json`'s `names` and `sales2chat` sections and update the name_db: 
+```
+NODE_CONFIG_DIR=./config node src/update-name.js
+```
+- Check that the names have been correctly modified: 
+```
+asd135441@ip-172-31-19-51:~/sales-assistant$ NODE_CONFIG_DIR=./config node utils/get_all_names.js 
+Sales: [
+  'Andy',"Ben','Carl'
+]
+After Sales: [ 'Daniel', 'Emily' ]
+```
+
+### Database Schema
+- msg_db
+store the data from Wechaty with little modification:
+
+- name_db
+```
+NODE_CONFIG_DIR=./config node utils/get_names_rooms.js 
+[
+'Andy': {
+    role: 'sales',
+    all_rooms: [
+      'group1',
+      'group2',
+      'group3',
+      'group4'
+    ]
+  },
+'Ben':{
+  ...
+}
+]
+```
+- room_db 
+```
+NODE_CONFIG_DIR=./config node utils/get_all_rooms.js 
+[
+  {
+    sales: [ 'Andy' ],
+    employee: [
+      EmployeeA,
+      EmployeeB,
+      EmployeeC,
+    ],
+    phase: 'pre-sales',
+    in_charge: 'Daniel',
+    after_sales: [ 'Daniel', 'Emily' ],
+    room_name: 'Customer Service Group'
+  },
+  {
+    sales:['Ben'],
+    ...
+  },
+  ...
+]
+```
+
 ## Appendix
 - Use [tmux](https://tmuxcheatsheet.com/) to run multiple processes in a single terminal
 
