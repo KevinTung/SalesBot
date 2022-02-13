@@ -181,6 +181,7 @@ After Sales: [ 'Daniel', 'Emily' ]
 
 ### Database Schema
 - msg_db
+
 Store the data listened from Wechaty:
 ```
 [
@@ -230,6 +231,7 @@ Output:
 
 ```
 - name_db
+
 Store all sales and their responsive rooms
 ```
 $ NODE_CONFIG_DIR=./config node utils/get_names_rooms.js 
@@ -250,6 +252,7 @@ Output:
 ]
 ```
 - room_db
+- 
 Store all rooms and their status
 ```
 $ NODE_CONFIG_DIR=./config node utils/get_all_rooms.js 
