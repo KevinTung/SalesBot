@@ -5,7 +5,7 @@
 For a company to sell its enterprise service, the sales need to communicate with the potential customers effectively.  As each sales are overloaded with customers, they are prone to delayed response and low-quality response. However, evaluating the conversation between sales and customers requires huge labor works from manager and HRs.  Therefore, a sales-assistant chatbot to record, analyze, and visualize the metrics of the conversation comes in handy. 
 
 ### System Structure
-![System Structure](https://github.com/KevinTung/sales-assistant/blob/main/assets/SystemStructure.jpg)
+![System Structure](./assets/SystemStructure.jpg)
 
 我們將系統解構成前端、puppet、後端代碼、以及數據庫。
 We structure the system into user, frontend, puppet, backend code, and database. 
