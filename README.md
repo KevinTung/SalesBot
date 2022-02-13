@@ -182,10 +182,20 @@ After Sales: [ 'Daniel', 'Emily' ]
 ### Database Schema
 - msg_db
 store the data from Wechaty with little modification:
+```
+$ NODE_CONFIG_DIR=./config node utils/get_room_msg.js '句子秒回&兔展'
+Output:
+12/16/2021 2:14:17 PM 句子秒回&兔展 customerA:好，我明白了，那我这边先向上汇报一下，如果有需要我具体找你沟通哈！ 
+12/16/2021 2:14:32 PM 句子秒回&兔展 salesA:好 
+12/20/2021 4:05:09 PM 句子秒回&兔展 customerA:@salesB  发不出去，一直转圈 
+...
+...
 
+```
 - name_db
 ```
-NODE_CONFIG_DIR=./config node utils/get_names_rooms.js 
+$ NODE_CONFIG_DIR=./config node utils/get_names_rooms.js 
+Output:
 [
 'Andy': {
     role: 'sales',
@@ -203,7 +213,8 @@ NODE_CONFIG_DIR=./config node utils/get_names_rooms.js
 ```
 - room_db 
 ```
-NODE_CONFIG_DIR=./config node utils/get_all_rooms.js 
+$ NODE_CONFIG_DIR=./config node utils/get_all_rooms.js 
+Output:
 [
   {
     sales: [ 'Andy' ],
