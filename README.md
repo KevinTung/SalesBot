@@ -25,10 +25,11 @@ If the manager want to change the sales-list, just modify `config/default.json` 
 ```
 ## [System Deployment](https://k0auuqcihb.feishu.cn/docs/doccnKLFrlLJ7kcJIZHDdUhhWGx#GeHWT6)
 ### Input: 
-Need to get sales-list, corporation name, alert-settings and 2 Vika sheets' ID from Managers.
+1. Need to get sales-list, corporation name, alert-settings and 2 Vika sheets' ID from Managers.
+2. make sure that you had created a Feishu Bot
+3. Deploy a server with docker installed
 ### Process:
-1. make sure that you had created a Feishu Bot
-2. Deploy a server with docker installed
+0. clone the project and install npm package
 ```
 git clone https://github.com/KevinTung/sales-assistant.git
 npm install
